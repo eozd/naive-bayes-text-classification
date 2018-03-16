@@ -47,12 +47,13 @@ using doc_type_index = std::unordered_map<size_t, DocType>;
 
 /**
  * @brief Typedef for an index from the id of a document to a vector containing
- * the terms in that document.
+ * the terms and their counts.
  *
  * A term is defined as a normalized token whereas a token is a maximum possible
  * sequence of non-whitespace characters. According to this definition, a token
  * may contain punctuation characters, as well. Depending on the normalization
  * operations, a term may or may not contain punctuation characters.
  */
-using doc_term_index = std::unordered_map<size_t, std::vector<std::string>>;
+using doc_term_index =
+    std::unordered_map<size_t, std::vector<std::pair<std::string, size_t>>>;
 } // namespace ir

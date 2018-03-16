@@ -32,16 +32,15 @@ docs_from_files(const std::vector<std::string>& file_list) {
             const ir::DocType type = pair.second;
 
             switch (type) {
-                case ir::DocType::Train:
-                    train_docs[id] = docs[id];
-                    break;
-                case ir::DocType::Test:
-                    test_docs[id] = docs[id];
-                    break;
-                default:
-                    break;
+            case ir::DocType::Train:
+                train_docs[id] = docs[id];
+                break;
+            case ir::DocType::Test:
+                test_docs[id] = docs[id];
+                break;
+            default:
+                break;
             }
-
         }
     }
 
@@ -64,7 +63,7 @@ ir::doc_term_index terms_from_raw_docs(ir::Tokenizer& tokenizer,
         const auto& raw_doc = pair.second;
         // get all the normalized terms in the raw document content and store in
         // document id
-        //term_docs[id] = tokenizer.get_doc_terms(raw_doc);
+        term_docs[id] = tokenizer.get_doc_terms(raw_doc);
     }
     return term_docs;
 }
@@ -94,12 +93,30 @@ int main() {
     }
 
     // tokenize and normalize the documents
-    auto term_docs = terms_from_raw_docs(tokenizer, raw_docs);
+    auto train_doc_terms_counts = terms_from_raw_docs(tokenizer, train_docs);
+    auto test_doc_terms_counts = terms_from_raw_docs(tokenizer, test_docs);
 
     std::cerr << "OK!" << std::endl;
+    std::cerr << "Training set has " << train_doc_terms_counts.size()
+              << " documents" << std::endl;
+    std::cerr << "Test set has " << test_doc_terms_counts.size() << " documents"
+              << std::endl;
     std::cerr << "Writing train and test dataset files..." << std::flush;
 
+    {
+        std::ofstream ofs(ir::TRAIN_SET_PATH, std::ios_base::trunc);
+        ir::write_dataset(ofs, train_doc_terms_counts);
+    }
+    {
+        std::ofstream ofs(ir::TEST_SET_PATH, std::ios_base::trunc);
+        ir::write_dataset(ofs, test_doc_terms_counts);
+    }
+
     std::cerr << "OK!" << std::endl;
+    std::cerr << "Train dataset is written to\t" << ir::TRAIN_SET_PATH
+              << std::endl;
+    std::cerr << "Test dataset is written to\t" << ir::TEST_SET_PATH
+              << std::endl;
 
     return 0;
 }

@@ -11,22 +11,11 @@
 // tell the compiler that stem will be externally linked
 extern int stem(char* p, int i, int j);
 
-ir::Tokenizer::Stats::Stats()
-    : total_unnormalized_tokens(0), total_normalized_tokens(0),
-      total_unnormalized_terms(0), total_normalized_terms(0) {}
-
-std::vector<std::pair<std::string, size_t>>
+std::vector<std::string>
 ir::Tokenizer::tokenize(const std::string& str) {
     std::string str_copy(str);
-    auto tokens = split(str_copy, " \t\n\r\v\f");
 
-    std::vector<std::pair<std::string, size_t>> result;
-    for (size_t i = 0; i < tokens.size(); ++i) {
-        result.emplace_back(tokens[i], i);
-    }
-    m_stats.total_unnormalized_tokens += result.size();
-
-    return result;
+    return split(str_copy, " \t\n\r\v\f");
 }
 
 std::string ir::Tokenizer::remove_punctuation(const std::string& token) {
@@ -104,55 +93,27 @@ void ir::Tokenizer::normalize_all(std::vector<std::string>& token_vec) {
 
 std::vector<std::pair<std::string, size_t>>
 ir::Tokenizer::get_doc_terms(const raw_doc& doc) {
-    auto tokens_indices = tokenize(doc);
+    auto tokens = tokenize(doc);
 
-    std::for_each(
-        tokens_indices.begin(), tokens_indices.end(),
-        [this](const auto& pair) { ++(this->unnormalized_terms[pair.first]); });
+    normalize_all(tokens);
 
-    std::transform(
-        tokens_indices.begin(), tokens_indices.end(), tokens_indices.begin(),
-        [this](const auto& token_pair) -> std::pair<std::string, size_t> {
-            return {this->normalize(token_pair.first), token_pair.second};
-        });
-
-    tokens_indices.erase(std::remove_if(tokens_indices.begin(),
-                                        tokens_indices.end(),
-                                        [](const auto& token_pair) {
-                                            return token_pair.first.empty();
-                                        }),
-                         tokens_indices.end());
-
-    std::for_each(
-        tokens_indices.begin(), tokens_indices.end(),
-        [this](const auto& pair) { ++(this->normalized_terms[pair.first]); });
-
-    m_stats.total_unnormalized_terms = unnormalized_terms.size();
-    m_stats.total_normalized_terms = normalized_terms.size();
-    m_stats.total_normalized_tokens += tokens_indices.size();
-
-    return tokens_indices;
-}
-
-ir::Tokenizer::Stats ir::Tokenizer::stats() {
-    std::vector<std::pair<std::string, size_t>> unnormalized(
-        unnormalized_terms.begin(), unnormalized_terms.end());
-    std::vector<std::pair<std::string, size_t>> normalized(
-        normalized_terms.begin(), normalized_terms.end());
-
-    std::sort(unnormalized.begin(), unnormalized.end(),
-              [](const auto& left, const auto& right) {
-                  return left.second > right.second;
-              });
-    std::sort(normalized.begin(), normalized.end(),
-              [](const auto& left, const auto& right) {
-                  return left.second > right.second;
-              });
-
-    for (size_t i = 0; i < Stats::TopTermCount; ++i) {
-        m_stats.top_unnormalized_terms[i] = unnormalized[i].first;
-        m_stats.top_normalized_terms[i] = normalized[i].first;
+    if (tokens.empty()) {
+        return {};
     }
 
-    return m_stats;
+    std::sort(tokens.begin(), tokens.end());
+
+    std::vector<std::pair<std::string, size_t>> result;
+    result.emplace_back(tokens.front(), 1);
+    for (size_t i = 1; i < tokens.size(); ++i) {
+        const auto& token = tokens[i];
+
+        if (result.back().first == token) {
+            ++result.back().second;
+        } else {
+            result.emplace_back(token, 1);
+        }
+    }
+
+    return result;
 }

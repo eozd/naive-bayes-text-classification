@@ -2,8 +2,8 @@
 
 #include "defs.hpp"
 #include <string>
-#include <vector>
 #include <unordered_map>
+#include <vector>
 
 namespace ir {
 
@@ -14,50 +14,6 @@ namespace ir {
 class Tokenizer {
   public:
     /**
-     * @brief Class to keep statistics related to tokenization operations.
-     */
-    struct Stats {
-        static constexpr size_t TopTermCount = 20;
-
-        /**
-         * @brief Default constructor for Stats.
-         *
-         * Each count is assigned to 0 and each array contains empty strings
-         */
-        Stats();
-        /**
-         * @brief Number of tokens the corpus contains before normalization
-         * operations.
-         */
-        size_t total_unnormalized_tokens;
-        /**
-         * @brief Number of tokens the corpus contains after normalization
-         * operations.
-         */
-        size_t total_normalized_tokens;
-        /**
-         * @brief Number of terms there are in the corpus before normalization
-         * operations.
-         */
-        size_t total_unnormalized_terms;
-        /**
-         * @brief Number of terms there are in the corpus after normalization
-         * operations.
-         */
-        size_t total_normalized_terms;
-        /**
-         * @brief List of top Stats::TopTermCount most frequent terms in the
-         * corpus before normalization operations.
-         */
-        std::array<std::string, TopTermCount> top_unnormalized_terms;
-        /**
-         * @brief List of top Stats::TopTermCount most frequent terms in the
-         * corpus after normalization operations.
-         */
-        std::array<std::string, TopTermCount> top_normalized_terms;
-    };
-
-    /**
      * @brief Split the given string with respect to whitespace characters and
      * return the resulting tokens and their positions in the document as a
      * vector.
@@ -66,7 +22,7 @@ class Tokenizer {
      *
      * @return std::vector of pairs containing the tokens and their positions.
      */
-    std::vector<std::pair<std::string, size_t>>
+    std::vector<std::string>
     tokenize(const std::string& str);
 
     /**
@@ -83,7 +39,7 @@ class Tokenizer {
 
     /**
      * @brief Tokenize and normalize a given raw document and return a
-     * vector of terms.
+     * vector of terms and their counts.
      *
      * This function tokenizes the given raw document by splitting it by
      * whitespace, and then does normalization operations to each token as
@@ -91,7 +47,8 @@ class Tokenizer {
      *
      * @param doc Raw document.
      *
-     * @return std::vector of normalized terms in the given raw document.
+     * @return std::vector of normalized terms and their counts in the given raw
+     * document.
      */
     std::vector<std::pair<std::string, size_t>>
     get_doc_terms(const raw_doc& doc);
@@ -147,20 +104,5 @@ class Tokenizer {
      * @return true if word is in stopword list; false, otherwise.
      */
     bool is_stopword(const std::string& word);
-
-    /**
-     * @brief Return the statistics gathered until this point.
-     *
-     * See Tokenizer::Stats for explanations of members of Stats struct.
-     *
-     * @return Stats struct storing various statistics about the tokenization
-     * process.
-     */
-    Stats stats();
-
-  private:
-    std::unordered_map<std::string, size_t> unnormalized_terms;
-    std::unordered_map<std::string, size_t> normalized_terms;
-    Stats m_stats;
 };
 } // namespace ir

@@ -17,6 +17,16 @@ const std::string DATASET_DIR = "Dataset";
 const std::string STOPWORD_PATH = "stopwords.txt";
 
 /**
+ * @brief Relative path from executable to the output training data.
+ */
+const std::string TRAIN_SET_PATH = "train.txt";
+
+/**
+ * @brief Relative path from executable to the output test data.
+ */
+const std::string TEST_SET_PATH = "test.txt";
+
+/**
  * @brief Return a list of filepaths of unzipped Reuters data files under
  * ir::DATASET_DIR.
  *
@@ -29,4 +39,12 @@ const std::string STOPWORD_PATH = "stopwords.txt";
  * executable to one of 22 Reuters sgm files.
  */
 std::vector<std::string> get_data_file_list();
+
+/**
+ *
+ * @param os
+ * @param index
+ * @return
+ */
+std::ostream& write_dataset(std::ostream& os, const doc_term_index& index);
 } // namespace ir
