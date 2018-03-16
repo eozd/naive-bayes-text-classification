@@ -117,10 +117,6 @@ int main() {
     auto test_doc_terms_counts = terms_from_raw_docs(tokenizer, test_docs);
 
     std::cerr << "OK!" << std::endl;
-    std::cerr << "Training set has " << train_doc_terms_counts.size()
-              << " documents" << std::endl;
-    std::cerr << "Test set has " << test_doc_terms_counts.size() << " documents"
-              << std::endl;
     std::cerr << "Writing train and test dataset files..." << std::flush;
 
     {
@@ -133,10 +129,12 @@ int main() {
     }
 
     std::cerr << "OK!" << std::endl;
-    std::cerr << "Train dataset is written to\t" << ir::TRAIN_SET_PATH
-              << std::endl;
-    std::cerr << "Test dataset is written to\t" << ir::TEST_SET_PATH
-              << std::endl;
+    std::cerr << train_doc_terms_counts.size()
+              << " documents was indexed to construct the train dataset at "
+              << ir::TRAIN_SET_PATH << std::endl;
+    std::cerr << test_doc_terms_counts.size()
+              << " documents was indexed to construct the test  dataset at "
+              << ir::TEST_SET_PATH << std::endl;
 
     return 0;
 }
