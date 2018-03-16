@@ -27,12 +27,19 @@ std::vector<std::string> ir::get_data_file_list() {
     return file_list;
 }
 
-std::ostream& ir::write_dataset(std::ostream& os, const doc_term_index& index) {
-    for (const auto& pair : index) {
+std::ostream& ir::write_dataset(std::ostream& os,
+                                const doc_term_index& term_index,
+                                const doc_class_index& class_index) {
+    for (const auto& pair : term_index) {
         const size_t id = pair.first;
         const auto& doc_terms_counts = pair.second;
+        const auto& classes = class_index.at(id);
 
-        os << id << '\n';
+        os << id;
+        for (const auto doc_class : classes) {
+            os << ' ' << doc_class;
+        }
+        os << '\n';
         for (const auto& term_count_pair : doc_terms_counts) {
             const auto& term = term_count_pair.first;
             const size_t count = term_count_pair.second;
@@ -43,5 +50,6 @@ std::ostream& ir::write_dataset(std::ostream& os, const doc_term_index& index) {
         os << '\n';
     }
     os << std::flush;
-}
 
+    return os;
+}

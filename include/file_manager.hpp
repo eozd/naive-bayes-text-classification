@@ -46,5 +46,6 @@ std::vector<std::string> get_data_file_list();
  * @param index
  * @return
  */
-std::ostream& write_dataset(std::ostream& os, const doc_term_index& index);
+std::ostream& write_dataset(std::ostream& os, const doc_term_index& term_index,
+                            const doc_class_index& class_index);
 } // namespace ir

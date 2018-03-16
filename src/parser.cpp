@@ -199,10 +199,11 @@ std::vector<ir::DocClass> get_doc_topics(std::istream& is) {
                                 ir::TOPIC_HEADER_END + " tags");
 }
 
-std::pair<ir::raw_doc_index, ir::doc_type_index>
+std::tuple<ir::raw_doc_index, ir::doc_type_index, ir::doc_class_index >
 ir::parse_file(std::istream& ifs) {
     raw_doc_index docs;
     doc_type_index doc_types;
+    doc_class_index doc_classes;
     std::string line;
 
     int id;
@@ -220,8 +221,9 @@ ir::parse_file(std::istream& ifs) {
 
             docs[id] = doc;
             doc_types[id] = type;
+            doc_classes[id] = topics;
         }
     }
 
-    return std::make_pair(docs, doc_types);
+    return std::make_tuple(docs, doc_types, doc_classes);
 };

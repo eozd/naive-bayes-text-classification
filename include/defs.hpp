@@ -39,6 +39,16 @@ enum class DocType {
 enum class DocClass { Earn, Acq, MoneyFx, Grain, Crude, Other };
 
 /**
+ * @brief Output operator for ir::DocClass.
+ *
+ * @param os Output stream to output the string representation of ir::DocClass.
+ * @param doc_class ir::DocClass enum.
+ *
+ * @return Modified output stream.
+ */
+std::ostream& operator<<(std::ostream& os, DocClass doc_class);
+
+/**
  * @brief Typedef for an index that holds the id of a document and its raw
  * content. (train/test) and its raw content.
  */
@@ -49,6 +59,12 @@ using raw_doc_index = std::unordered_map<size_t, raw_doc>;
  * as ir::DocType.
  */
 using doc_type_index = std::unordered_map<size_t, DocType>;
+
+/**
+ * @brief Typedef for an index that holds the id of a document and the vector
+ * of classes it belongs to.
+ */
+using doc_class_index = std::unordered_map<size_t, std::vector<DocClass>>;
 
 /**
  * @brief Typedef for an index from the id of a document to a vector containing

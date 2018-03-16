@@ -115,8 +115,9 @@ const std::string BODY_END_TAG = "</BODY>";
  *
  * @param ifs Input stream containing a Reuters sgm file.
  *
- * @return pair of mappings where the first mapping is from document ID to its
- * raw content and the second mapping from document ID to its ir::DocType.
+ * @return Tuple of mappings where the first mapping is from document ID to its
+ * raw content, the second mapping from document ID to its ir::DocType, and the
+ * third mapping from document ID to its vector of ir::DocClass types.
  */
-std::pair<raw_doc_index, doc_type_index> parse_file(std::istream& ifs);
+std::tuple<raw_doc_index, doc_type_index, doc_class_index> parse_file(std::istream& ifs);
 } // namespace ir
