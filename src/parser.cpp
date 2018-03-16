@@ -30,6 +30,37 @@ int get_doc_id(const std::string& header_line) {
 }
 
 /**
+ * @brief Get the type of a document (train/test) with the given header line.
+ *
+ * Header line of a document starts with ir::DOC_HEADER. Type of a document in
+ * the header line is specified with ir::TRAIN_TEST_FIELD. This function finds
+ * the type field in the header line and returns the corresponding ir::DocType
+ * value.
+ *
+ * @param header_line Header line of a Reuters document starting with
+ * ir::DOC_HEADER.
+ * @return Type of the document (train/test).
+ */
+ir::DocType get_doc_type(const std::string& header_line) {
+    // header start index
+    size_t split_pos = header_line.find(ir::TRAIN_TEST_FIELD);
+    // number beginning index
+    size_t type_beg_pos = split_pos + ir::TRAIN_TEST_FIELD.size();
+    // number end index
+    size_t type_end_pos = header_line.find('\"', type_beg_pos);
+
+    std::string type =
+        header_line.substr(type_beg_pos, type_end_pos - type_beg_pos);
+
+    if (type == ir::TRAIN_KEY) {
+        return ir::DocType::Train;
+    } else if (type == ir::TEST_KEY) {
+        return ir::DocType::Test;
+    }
+    return ir::DocType::Other;
+}
+
+/**
  * @brief Find the next document in the input stream and return its raw content.
  *
  * Raw content of a document is defined as the text inside its ir::TXT_BEG_TAG
@@ -107,21 +138,27 @@ std::string text_between_tags(const std::string& doc_text,
     return doc_text.substr(beg_index, len);
 }
 
-ir::raw_doc_index ir::parse_file(std::istream& ifs) {
+std::pair<ir::raw_doc_index, ir::doc_type_index>
+ir::parse_file(std::istream& ifs) {
     raw_doc_index docs;
+    doc_type_index doc_types;
     std::string line;
 
     int id;
+    DocType type;
     raw_doc doc;
     while (std::getline(ifs, line)) {
         if (line.find(DOC_HEADER) == 0) {
             id = get_doc_id(line);
+            type = get_doc_type(line);
             doc = get_next_doc(ifs);
             doc = text_between_tags(doc, TITLE_BEG_TAG, TITLE_END_TAG) + "\n" +
                   text_between_tags(doc, BODY_BEG_TAG, BODY_END_TAG);
+
             docs[id] = doc;
+            doc_types[id] = type;
         }
     }
 
-    return docs;
+    return std::make_pair(docs, doc_types);
 };

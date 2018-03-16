@@ -16,17 +16,36 @@
  *
  * @return Mapping from document ID to raw document content.
  */
-ir::raw_doc_index docs_from_files(const std::vector<std::string>& file_list) {
-    ir::raw_doc_index all_docs;
+std::pair<ir::raw_doc_index, ir::raw_doc_index>
+docs_from_files(const std::vector<std::string>& file_list) {
+    ir::raw_doc_index train_docs, test_docs;
+
+    ir::raw_doc_index docs;
+    ir::doc_type_index doc_types;
     for (const auto& filepath : file_list) {
         std::ifstream ifs(filepath);
         // get all the docs in the current file
-        auto docs_per_file = ir::parse_file(ifs);
-        // store all the docs in the result variable
-        all_docs.insert(docs_per_file.begin(), docs_per_file.end());
+        std::tie(docs, doc_types) = ir::parse_file(ifs);
+        // put each document to its corresponding container (train/test)
+        for (const auto& pair : doc_types) {
+            const size_t id = pair.first;
+            const ir::DocType type = pair.second;
+
+            switch (type) {
+                case ir::DocType::Train:
+                    train_docs[id] = docs[id];
+                    break;
+                case ir::DocType::Test:
+                    test_docs[id] = docs[id];
+                    break;
+                default:
+                    break;
+            }
+
+        }
     }
 
-    return all_docs;
+    return std::make_pair(train_docs, test_docs);
 };
 
 /**
@@ -45,7 +64,7 @@ ir::doc_term_index terms_from_raw_docs(ir::Tokenizer& tokenizer,
         const auto& raw_doc = pair.second;
         // get all the normalized terms in the raw document content and store in
         // document id
-        term_docs[id] = tokenizer.get_doc_terms(raw_doc);
+        //term_docs[id] = tokenizer.get_doc_terms(raw_doc);
     }
     return term_docs;
 }
@@ -61,10 +80,15 @@ int main() {
     std::cerr << "Constructing train and test datasets..." << std::flush;
     ir::Tokenizer tokenizer;
     // parse the files and read the docs
-    auto raw_docs = docs_from_files(ir::get_data_file_list());
+    ir::raw_doc_index train_docs, test_docs;
+    std::tie(train_docs, test_docs) = docs_from_files(ir::get_data_file_list());
 
     // handle special html character sequences
-    for (auto& pair : raw_docs) {
+    for (auto& pair : train_docs) {
+        auto& doc = pair.second;
+        ir::convert_html_special_chars(doc);
+    }
+    for (auto& pair : test_docs) {
         auto& doc = pair.second;
         ir::convert_html_special_chars(doc);
     }

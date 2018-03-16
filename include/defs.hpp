@@ -16,50 +16,43 @@ namespace ir {
 using raw_doc = std::string;
 
 /**
+ * @brief Enum denoting if a document is a train or test document.
+ */
+enum class DocType {
+    /**
+     * @brief Train document.
+     */
+    Train,
+    /**
+     * @brief Test document.
+     */
+    Test,
+    /**
+     * @brief Other type of document that won't be used in training/testing.
+     */
+    Other
+};
+
+/**
  * @brief Typedef for an index that holds the id of a document and its raw
- * content.
+ * content. (train/test) and its raw content.
  */
 using raw_doc_index = std::unordered_map<size_t, raw_doc>;
 
 /**
+ * @brief Typedef for an index that holds the id of a document and its type
+ * as ir::DocType.
+ */
+using doc_type_index = std::unordered_map<size_t, DocType>;
+
+/**
  * @brief Typedef for an index from the id of a document to a vector containing
- * the terms and their positions in that document.
+ * the terms in that document.
  *
  * A term is defined as a normalized token whereas a token is a maximum possible
  * sequence of non-whitespace characters. According to this definition, a token
  * may contain punctuation characters, as well. Depending on the normalization
  * operations, a term may or may not contain punctuation characters.
  */
-using doc_term_index =
-    std::unordered_map<size_t, std::vector<std::pair<std::string, size_t>>>;
-
-/**
- * @brief Typedef for a data structure representing the positional inverted
- * index of a document corpus.
- *
- * In positional inverted index, each term (std::string) is mapped to a vector
- * of pairs. The first element of a pair is the document id. The second element
- * of a pair is a vector of integers, the positions where the term occurs in
- * this particular document.
- */
-using pos_inv_index =
-    std::unordered_map<std::string,
-                       std::vector<std::pair<size_t, std::vector<size_t>>>>;
-
-/**
- * @brief Typedef for a data structure mapping a term to a unique ID.
- */
-using term_id_map = std::unordered_map<std::string, size_t>;
-
-/**
- * @brief Typedef for a data structure mapping ID of a term to vector of
- * <doc_id, pos_vec> pairs.
- *
- * Each term ID is mapped to a vector of pairs. Each pair contains the ID of a
- * document containing this term. The second element of each pair contains the
- * vector of positions where the term occurs in the document.
- */
-using id_pos_map =
-    std::unordered_map<size_t,
-                       std::vector<std::pair<size_t, std::vector<size_t>>>>;
+using doc_term_index = std::unordered_map<size_t, std::vector<std::string>>;
 } // namespace ir

@@ -18,6 +18,22 @@ const std::string DOC_HEADER = "<REUTERS";
 const std::string ID_FIELD = "NEWID=\"";
 
 /**
+ * @brief Field inside ir::DOC_HEADER that denotes if the document is a
+ * train or test document.
+ */
+const std::string TRAIN_TEST_FIELD = "LEWISSPLIT=\"";
+
+/**
+ * @brief ir::TRAIN_TEST_FIELD value denoting the training set.
+ */
+const std::string TRAIN_KEY = "TRAIN";
+
+/**
+ * @brief ir::TRAIN_TEST_FIELD value denoting the test set.
+ */
+const std::string TEST_KEY = "TEST";
+
+/**
  * @brief Tag inside document denoting the beginning of document text.
  */
 const std::string TXT_BEG_TAG = "<TEXT";
@@ -49,12 +65,13 @@ const std::string BODY_END_TAG = "</BODY>";
 
 /**
  * @brief Parse a Reuters sgm file from the beginning of the given input stream
- * and return a mapping from document IDS to their raw content.
+ * and return a pair of mapping from document IDS to their raw content and
+ * document IDs to their types.
  *
  * @param ifs Input stream containing a Reuters sgm file.
  *
- * @return Mapping from document IDs obtained from ir::ID_FIELD to document text
- * which is a combination of title and body of the document.
+ * @return pair of mappings where the first mapping is from document ID to its
+ * raw content and the second mapping from document ID to its ir::DocType.
  */
-raw_doc_index parse_file(std::istream& ifs);
+std::pair<raw_doc_index, doc_type_index> parse_file(std::istream& ifs);
 } // namespace ir
