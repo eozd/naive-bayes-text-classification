@@ -66,6 +66,8 @@ using doc_type_index = std::unordered_map<size_t, DocType>;
  */
 using doc_class_index = std::unordered_map<size_t, std::vector<DocClass>>;
 
+using doc_sample = std::unordered_map<std::string, size_t>;
+
 /**
  * @brief Typedef for an index from the id of a document to a vector containing
  * the terms and their counts.
@@ -75,6 +77,5 @@ using doc_class_index = std::unordered_map<size_t, std::vector<DocClass>>;
  * may contain punctuation characters, as well. Depending on the normalization
  * operations, a term may or may not contain punctuation characters.
  */
-using doc_term_index =
-    std::unordered_map<size_t, std::vector<std::pair<std::string, size_t>>>;
+using doc_term_index = std::unordered_map<size_t, doc_sample>;
 } // namespace ir

@@ -18,7 +18,7 @@ add_executable(construct_datasets
         src/defs.cpp)
 
 add_executable(classifier
-        src/main_classifier.cpp)
+        src/main_classifier.cpp include/prob_table.hpp)
 
 set_target_properties(construct_datasets PROPERTIES RUNTIME_OUTPUT_DIRECTORY ..)
 set_target_properties(classifier PROPERTIES RUNTIME_OUTPUT_DIRECTORY ..)

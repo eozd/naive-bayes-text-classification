@@ -48,4 +48,8 @@ std::vector<std::string> get_data_file_list();
  */
 std::ostream& write_dataset(std::ostream& os, const doc_term_index& term_index,
                             const doc_class_index& class_index);
+
+
+std::pair<ir::doc_term_index, ir::doc_class_index>
+read_dataset(std::istream& is);
 } // namespace ir

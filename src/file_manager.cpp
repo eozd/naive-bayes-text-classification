@@ -53,3 +53,8 @@ std::ostream& ir::write_dataset(std::ostream& os,
 
     return os;
 }
+
+std::pair<ir::doc_term_index, ir::doc_class_index>
+ir::read_dataset(std::istream& is){
+
+};

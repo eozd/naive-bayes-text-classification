@@ -1,4 +1,8 @@
 #include <iostream>
+#include <fstream>
+#include <naive_bayes_classifier.hpp>
+#include <defs.hpp>
+#include "file_manager.hpp"
 
 static const std::string FitArg = "--fit";
 static const std::string PredictArg = "--predict";
@@ -59,13 +63,26 @@ int main(int argc, char** argv) {
     }
 
     std::string option(argv[1]);
+    std::string dataset_path(argv[2]);
+    std::string model_path(argv[3]);
+
+    ir::NaiveBayesClassifier<ir::DocClass> clf;
     if (option == FitArg) {
-        // read train set from train_set
+        std::ifstream train_file(dataset_path);
         // build and fit model
-        // write model to model_path
+        std::ofstream model_file(model_path);
+        model_file << clf;
     } else if (option == PredictArg) {
-        // read model from model_path
-        // read test set from test_set
+        {
+            std::ifstream model_file(model_path);
+            model_file >> clf;
+        }
+        ir::doc_term_index doc_terms;
+        ir::doc_class_index doc_classes;
+        {
+            std::ifstream test_file(dataset_path);
+            std::tie(doc_terms, doc_classes) = ir::read_dataset(test_file);
+        }
         // predict classes
         // output classes to STDOUT
     }
