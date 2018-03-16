@@ -1,0 +1,7 @@
+# General settings
+BasedOnStyle: LLVM
+IndentWidth: 4
+
+Language: Cpp
+DerivePointerAlignment: false
+PointerAlignment: Left
