@@ -34,6 +34,51 @@ const std::string TRAIN_KEY = "TRAIN";
 const std::string TEST_KEY = "TEST";
 
 /**
+ * @brief Header that denotes the beginning of a topic list.
+ */
+const std::string TOPIC_HEADER_BEG = "<TOPICS>";
+
+/**
+ * @brief Header that denotes the end of a topic list.
+ */
+const std::string TOPIC_HEADER_END = "</TOPICS>";
+
+/**
+ * @brief Tag inside document denoting the beginning of a class keyword.
+ */
+const std::string CLASS_BEG_TAG = "<D>";
+
+/**
+ * @brief Tag inside document denoting the end of a class keyword.
+ */
+const std::string CLASS_END_TAG = "</D>";
+
+/**
+ * @brief Key used to represent ir::DocClass::Earn in Reuters datafiles.
+ */
+const std::string EARN_CLASS_KEY = "earn";
+
+/**
+ * @brief Key used to represent ir::DocClass::Acq in Reuters datafiles.
+ */
+const std::string ACQ_CLASS_KEY = "acq";
+
+/**
+ * @brief Key used to represent ir::DocClass::MoneyFx in Reuters datafiles.
+ */
+const std::string MONEY_FX_CLASS_KEY = "money-fx";
+
+/**
+ * @brief Key used to represent ir::DocClass::Grain in Reuters datafiles.
+ */
+const std::string GRAIN_CLASS_KEY = "grain";
+
+/**
+ * @brief Key used to represent ir::DocClass::Crude in Reuters datafiles.
+ */
+const std::string CRUDE_CLASS_KEY = "crude";
+
+/**
  * @brief Tag inside document denoting the beginning of document text.
  */
 const std::string TXT_BEG_TAG = "<TEXT";

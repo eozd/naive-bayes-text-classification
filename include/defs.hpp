@@ -34,6 +34,11 @@ enum class DocType {
 };
 
 /**
+ * @brief Enum denoting the class of a document.
+ */
+enum class DocClass { Earn, Acq, MoneyFx, Grain, Crude, Other };
+
+/**
  * @brief Typedef for an index that holds the id of a document and its raw
  * content. (train/test) and its raw content.
  */
