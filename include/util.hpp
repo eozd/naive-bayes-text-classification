@@ -20,6 +20,15 @@ namespace ir {
  */
 std::vector<std::string> split(std::string& str, const std::string& delimiters);
 
+/**
+ *
+ * @tparam Scalar
+ * @param nom
+ * @param denom
+ * @param total_items
+ * @param alpha
+ * @return
+ */
 template <typename Scalar>
 double laplace_smooth(Scalar nom, Scalar denom, size_t total_items,
                       double alpha = 1) {

@@ -22,8 +22,7 @@ class Tokenizer {
      *
      * @return std::vector of pairs containing the tokens and their positions.
      */
-    std::vector<std::string>
-    tokenize(const std::string& str);
+    std::vector<std::string> tokenize(const std::string& str);
 
     /**
      * @brief Remove certain punctuation characters from certain parts of the
@@ -50,8 +49,7 @@ class Tokenizer {
      * @return std::vector of normalized terms and their counts in the given raw
      * document.
      */
-    ir::doc_sample
-    get_doc_terms(const raw_doc& doc);
+    ir::doc_sample get_doc_terms(const raw_doc& doc);
 
     /**
      * @brief Return the normalized version a given token.

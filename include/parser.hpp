@@ -119,5 +119,6 @@ const std::string BODY_END_TAG = "</BODY>";
  * raw content, the second mapping from document ID to its ir::DocType, and the
  * third mapping from document ID to its vector of ir::DocClass types.
  */
-std::tuple<raw_doc_index, doc_type_index, doc_multiclass_index> parse_file(std::istream& ifs);
+std::tuple<raw_doc_index, doc_type_index, doc_multiclass_index>
+parse_file(std::istream& ifs);
 } // namespace ir

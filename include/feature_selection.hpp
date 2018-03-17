@@ -111,4 +111,84 @@ std::unordered_map<Word, double> mutual_info(const std::vector<sample<Word>>& x,
 
     return mut_info_map;
 };
+
+/**
+ *
+ * @tparam Word
+ * @tparam Class
+ * @param x_train
+ * @param y_train
+ * @param class_dict
+ * @param top_k
+ * @return
+ */
+template <typename Word, typename Class>
+std::unordered_map<Class, std::vector<Word>>
+get_top_words_per_class(const std::vector<sample<Word>>& x_train,
+                        const std::vector<Class>& y_train,
+                        const std::set<Class>& class_dict, const size_t top_k) {
+    auto max_lambda = [](const auto& left, const auto& right) {
+        return left.second < right.second;
+    };
+
+    std::unordered_map<Class, std::vector<Word>> top_words_per_class;
+    for (const Class& doc_class : class_dict) {
+        auto mut_info_map = ir::mutual_info(x_train, y_train, doc_class);
+
+        std::vector<std::pair<Word, double>> mut_info_vec;
+        std::copy(mut_info_map.begin(), mut_info_map.end(),
+                  std::back_inserter(mut_info_vec));
+        std::make_heap(mut_info_vec.begin(), mut_info_vec.end(), max_lambda);
+
+        std::vector<Word> top_k_words;
+        for (size_t i = 0; i < top_k; ++i) {
+            top_k_words.push_back(mut_info_vec.front().first);
+            std::pop_heap(mut_info_vec.begin(), mut_info_vec.end(), max_lambda);
+            mut_info_vec.pop_back();
+        }
+
+        std::sort(top_k_words.begin(), top_k_words.end());
+        top_words_per_class[doc_class] = top_k_words;
+    }
+
+    return top_words_per_class;
+};
+
+/**
+ *
+ * @tparam Word
+ * @tparam Class
+ * @param x_train
+ * @param y_train
+ * @param top_words_per_class
+ */
+template <typename Word, typename Class>
+void remove_unimportant_words(
+    std::vector<sample<Word>>& x_train, std::vector<Class>& y_train,
+    const std::unordered_map<Class, std::vector<Word>>& top_words_per_class) {
+
+    for (const auto& pair : top_words_per_class) {
+        const Class& cls = pair.first;
+        const auto& top_words = pair.second;
+
+        for (size_t i = 0; i < y_train.size(); ++i) {
+            if (y_train[i] != cls) {
+                continue;
+            }
+
+            std::vector<Word> words;
+            for (const auto& word_count_pair : x_train[i]) {
+                words.push_back(word_count_pair.first);
+            }
+
+            for (const auto& word : words) {
+                bool not_top_word = !std::binary_search(top_words.begin(),
+                                                        top_words.end(), word);
+                if (not_top_word) {
+                    x_train[i].erase(word);
+                }
+            }
+        }
+    }
+};
 } // namespace ir
