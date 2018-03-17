@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD 14)
 
 include_directories("include")
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -g")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -O3")
 
 add_executable(construct_datasets
         src/main_construct_datasets.cpp
@@ -18,7 +18,7 @@ add_executable(construct_datasets
         src/defs.cpp)
 
 add_executable(classifier
-        src/main_classifier.cpp src/defs.cpp src/file_manager.cpp)
+        src/main_classifier.cpp src/defs.cpp src/file_manager.cpp include/feature_selection.hpp)
 
 set_target_properties(construct_datasets PROPERTIES RUNTIME_OUTPUT_DIRECTORY ..)
 set_target_properties(classifier PROPERTIES RUNTIME_OUTPUT_DIRECTORY ..)

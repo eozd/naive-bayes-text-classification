@@ -81,7 +81,16 @@ using doc_class_index = std::unordered_map<size_t, DocClass>;
  */
 using doc_multiclass_index = std::unordered_map<size_t, std::vector<DocClass>>;
 
-using doc_sample = std::unordered_map<std::string, size_t>;
+/**
+ * @brief sample type to be used that requires words and their counts
+ * as a sample.
+ */
+template <typename Word> using sample = std::unordered_map<Word, size_t>;
+
+/**
+ * @brief Representation of a single document as a classifier sample.
+ */
+using doc_sample = sample<std::string>;
 
 /**
  * @brief Typedef for an index from the id of a document to a vector containing

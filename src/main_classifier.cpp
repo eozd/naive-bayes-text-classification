@@ -1,3 +1,4 @@
+#include "feature_selection.hpp"
 #include "file_manager.hpp"
 #include "naive_bayes_classifier.hpp"
 #include <fstream>
@@ -21,11 +22,11 @@ void print_usage(char* program_name) {
     size_t max_param_len = std::max(param_fit.size(), param_predict.size());
 
     header += std::string(program_name) + ' ';
-    std::cerr << header << '[' << param_fit << ']' << '\n';
+    std::cerr << header << '[' << param_fit << " [" << param_num_features << ']'
+              << ']' << '\n';
 
     print_space(std::cerr, header.size());
-    std::cerr << '[' << param_predict << " [" << param_num_features << ']'
-              << ']' << '\n';
+    std::cerr << '[' << param_predict << ']' << '\n';
 
     std::cerr << '\n';
     std::cerr
@@ -42,18 +43,21 @@ void print_usage(char* program_name) {
 
     std::cerr << '\n';
 
+    std::cerr << "  " << param_num_features << "\t\t"
+              << " Number of features to use during training.\n";
+    print_space(std::cerr, max_param_len + 4);
+    std::cerr << "If not given, all the words are used as features.\n";
+    print_space(std::cerr, max_param_len + 4);
+    std::cerr
+        << "Best N features are chosen using Mutual Information criterion\n";
+
+    std::cerr << '\n';
+
     std::cerr << "  " << param_predict << '\t'
               << " Predict the classes of samples\n";
     print_space(std::cerr, max_param_len + 4);
     std::cerr << "at test_set using an already fitted model at model_path"
               << '\n';
-
-    std::cerr << '\n';
-
-    std::cerr << "  " << param_num_features << "\t\t"
-              << " Number of features to use during prediction.\n";
-    print_space(std::cerr, max_param_len + 4);
-    std::cerr << "If not given, all the words are used as features\n";
 
     std::cerr << std::flush;
 }
@@ -70,14 +74,77 @@ bool correct_args(int argc, char** argv) {
 
     std::string num_features_option(argv[4]);
     std::string num_features(argv[5]);
-    correct_option = num_features_option == NumFeaturesArg;
+    correct_option = option == FitArg && num_features_option == NumFeaturesArg;
     bool only_digits =
         num_features.find_first_not_of("0123456789") == std::string::npos;
 
     return correct_option && only_digits;
 }
 
-void fit(char** argv) {
+std::unordered_map<ir::DocClass, std::vector<std::string>>
+get_top_words_per_class(const std::vector<ir::doc_sample>& x_train,
+                        const std::vector<ir::DocClass>& y_train,
+                        const std::set<ir::DocClass>& class_dict,
+                        const size_t top_k) {
+    auto max_lambda = [](const auto& left, const auto& right) {
+        return left.second < right.second;
+    };
+
+    std::unordered_map<ir::DocClass, std::vector<std::string>>
+        top_words_per_class;
+    for (const ir::DocClass& doc_class : class_dict) {
+        auto mut_info_map = ir::mutual_info(x_train, y_train, doc_class);
+
+        std::vector<std::pair<std::string, double>> mut_info_vec;
+        std::copy(mut_info_map.begin(), mut_info_map.end(),
+                  std::back_inserter(mut_info_vec));
+        std::make_heap(mut_info_vec.begin(), mut_info_vec.end(), max_lambda);
+
+        std::vector<std::string> top_k_words;
+        for (size_t i = 0; i < top_k; ++i) {
+            top_k_words.push_back(mut_info_vec.front().first);
+            std::pop_heap(mut_info_vec.begin(), mut_info_vec.end(), max_lambda);
+            mut_info_vec.pop_back();
+        }
+
+        std::sort(top_k_words.begin(), top_k_words.end());
+        top_words_per_class[doc_class] = top_k_words;
+    }
+
+    return top_words_per_class;
+};
+
+void remove_unimportant_words(
+    std::vector<ir::doc_sample>& x_train, std::vector<ir::DocClass>& y_train,
+    const std::unordered_map<ir::DocClass, std::vector<std::string>>&
+        top_words_per_class) {
+
+    for (const auto& pair : top_words_per_class) {
+        const ir::DocClass& cls = pair.first;
+        const auto& top_words = pair.second;
+
+        for (size_t i = 0; i < y_train.size(); ++i) {
+            if (y_train[i] != cls) {
+                continue;
+            }
+
+            std::vector<std::string> words;
+            for (const auto& word_count_pair : x_train[i]) {
+                words.push_back(word_count_pair.first);
+            }
+
+            for (const auto& word : words) {
+                bool not_top_word = !std::binary_search(top_words.begin(),
+                                                        top_words.end(), word);
+                if (not_top_word) {
+                    x_train[i].erase(word);
+                }
+            }
+        }
+    }
+}
+
+void fit(char** argv, size_t num_features = 0) {
     std::string train_path(argv[2]);
     std::string model_path(argv[3]);
 
@@ -90,6 +157,7 @@ void fit(char** argv) {
 
     std::vector<ir::doc_sample> x_train;
     std::vector<ir::DocClass> y_train;
+    std::set<ir::DocClass> class_dict;
     for (const auto& pair : doc_terms) {
         const size_t id = pair.first;
         const ir::doc_sample& doc = pair.second;
@@ -97,6 +165,14 @@ void fit(char** argv) {
 
         x_train.push_back(doc);
         y_train.push_back(doc_class);
+        class_dict.insert(doc_class);
+    }
+
+    if (num_features != 0) {
+        auto top_words_per_class =
+            get_top_words_per_class(x_train, y_train, class_dict, num_features);
+
+        remove_unimportant_words(x_train, y_train, top_words_per_class);
     }
 
     ir::NaiveBayesClassifier<std::string, ir::DocClass> clf;
@@ -107,7 +183,7 @@ void fit(char** argv) {
     }
 }
 
-void predict(char** argv, size_t num_features = 0) {
+void predict(char** argv) {
     std::string test_path(argv[2]);
     std::string model_path(argv[3]);
 
@@ -135,10 +211,6 @@ void predict(char** argv, size_t num_features = 0) {
         y_test.push_back(doc_class);
     }
 
-    if (num_features != 0) {
-        // todo: use mutual information to select features for docs
-    }
-
     const auto y_pred = clf.predict(x_test);
 
     for (size_t i = 0; i < y_pred.size(); ++i) {
@@ -155,14 +227,14 @@ int main(int argc, char** argv) {
 
     std::string option(argv[1]);
     if (option == FitArg) {
-        fit(argv);
-    } else if (option == PredictArg) {
         if (argc == 6) {
             size_t num_features = std::stoul(argv[5]);
-            predict(argv, num_features);
+            fit(argv, num_features);
         } else {
-            predict(argv);
+            fit(argv);
         }
+    } else if (option == PredictArg) {
+        predict(argv);
     }
 
     return 0;

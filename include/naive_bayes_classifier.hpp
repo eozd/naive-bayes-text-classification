@@ -31,13 +31,6 @@ namespace ir {
 template <typename Word, typename Class> class NaiveBayesClassifier {
   public:
     /**
-     * @brief Representation of a single document.
-     *
-     * Multinomial Naive Bayes requires words and their counts in the documents.
-     */
-    using sample = std::unordered_map<Word, size_t>;
-
-    /**
      * @brief Representation of prior class distribution.
      *
      * Each entry of prior_t is a mapping from a class to the count of documents
@@ -92,7 +85,7 @@ template <typename Word, typename Class> class NaiveBayesClassifier {
      *
      * @return Reference to the fitted version of this object.
      */
-    NaiveBayesClassifier& fit(const std::vector<sample>& x_train,
+    NaiveBayesClassifier& fit(const std::vector<sample<Word>>& x_train,
                               const std::vector<Class>& y_train);
 
     /**
@@ -103,7 +96,7 @@ template <typename Word, typename Class> class NaiveBayesClassifier {
      *
      * @return Class of the given sample.
      */
-    Class predict(const sample& x_pred) const;
+    Class predict(const sample<Word>& x_pred) const;
 
     /**
      * @brief Predict the classes of all samples in the given sample vector.
@@ -112,7 +105,7 @@ template <typename Word, typename Class> class NaiveBayesClassifier {
      *
      * @return Class of each sample in the given order.
      */
-    std::vector<Class> predict(const std::vector<sample>& x_pred) const;
+    std::vector<Class> predict(const std::vector<sample<Word>>& x_pred) const;
 
     /**
      * @brief Get the prior class distribution.
@@ -207,7 +200,7 @@ NaiveBayesClassifier<Word, Class>::NaiveBayesClassifier(
 
 template <typename Word, typename Class>
 NaiveBayesClassifier<Word, Class>&
-NaiveBayesClassifier<Word, Class>::fit(const std::vector<sample>& x_train,
+NaiveBayesClassifier<Word, Class>::fit(const std::vector<sample<Word>>& x_train,
                                        const std::vector<Class>& y_train) {
     assert(x_train.size() == y_train.size());
 
@@ -221,9 +214,9 @@ NaiveBayesClassifier<Word, Class>::fit(const std::vector<sample>& x_train,
 
     // Construct class mega documents (concatenate all docs belonging to same
     // class)
-    std::unordered_map<Class, sample> class_megadocs;
+    std::unordered_map<Class, sample<Word>> class_megadocs;
     for (size_t i = 0; i < x_train.size(); ++i) {
-        const sample& smp = x_train[i];
+        const sample<Word>& smp = x_train[i];
         const Class& cls = y_train[i];
 
         for (const auto& pair : smp) {
@@ -237,7 +230,7 @@ NaiveBayesClassifier<Word, Class>::fit(const std::vector<sample>& x_train,
     // Compute marginal likelihood count for each <word,class> pair
     for (const auto& pair : class_megadocs) {
         const Class& cls = pair.first;
-        const sample& smp = pair.second;
+        const sample<Word>& smp = pair.second;
 
         for (const auto& sample_pair : smp) {
             const Word& word = sample_pair.first;
@@ -251,7 +244,8 @@ NaiveBayesClassifier<Word, Class>::fit(const std::vector<sample>& x_train,
 }
 
 template <typename Word, typename Class>
-Class NaiveBayesClassifier<Word, Class>::predict(const sample& x_pred) const {
+Class NaiveBayesClassifier<Word, Class>::predict(
+    const sample<Word>& x_pred) const {
     // Log posterior score of each class
     std::unordered_map<Class, double> posterior;
 
@@ -299,11 +293,12 @@ Class NaiveBayesClassifier<Word, Class>::predict(const sample& x_pred) const {
 
 template <typename Word, typename Class>
 std::vector<Class> NaiveBayesClassifier<Word, Class>::predict(
-    const std::vector<sample>& x_pred) const {
+    const std::vector<sample<Word>>& x_pred) const {
     // predict class of all samples one-by-one
     std::vector<Class> y_pred(x_pred.size());
-    std::transform(x_pred.begin(), x_pred.end(), y_pred.begin(),
-                   [this](const sample& smp) { return this->predict(smp); });
+    std::transform(
+        x_pred.begin(), x_pred.end(), y_pred.begin(),
+        [this](const sample<Word>& smp) { return this->predict(smp); });
 
     return y_pred;
 }
