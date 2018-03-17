@@ -12,6 +12,7 @@
 #include <vector>
 
 #include "defs.hpp"
+#include "util.hpp"
 
 namespace ir {
 
@@ -41,7 +42,7 @@ template <typename Word, typename Class> class NaiveBayesClassifier {
      *
      * Each entry of prior_t is a mapping from a class to its prior probability.
      */
-    using prior_t = std::unordered_map<Class, double>;
+    using prior_t = std::unordered_map<Class, size_t>;
 
     /**
      * @brief Representation of likelihood \f$p(w|c)\f$.
@@ -59,7 +60,7 @@ template <typename Word, typename Class> class NaiveBayesClassifier {
      * likelihood \f$p(w|c)\f$..
      */
     using likelihood_t =
-        std::unordered_map<Word, std::unordered_map<Class, double>>;
+        std::unordered_map<Word, std::unordered_map<Class, size_t>>;
 
   public:
     /**
@@ -129,6 +130,8 @@ template <typename Word, typename Class> class NaiveBayesClassifier {
   private:
     std::set<Word> m_dict;
     std::vector<Class> m_class_vec;
+    std::vector<size_t> m_class_term_counts;
+    size_t total_samples;
     prior_t m_prior;
     likelihood_t m_likelihood;
 };
@@ -168,16 +171,35 @@ std::istream& operator>>(std::istream& is,
 template <typename Word, typename Class>
 NaiveBayesClassifier<Word, Class>::NaiveBayesClassifier(
     const prior_t& prior, const likelihood_t& likelihood)
-    : m_dict(), m_class_vec(), m_prior(prior), m_likelihood(likelihood) {
+    : m_dict(), m_class_vec(), m_class_term_counts(prior.size(), 0),
+      total_samples(std::accumulate(prior.begin(), prior.end(), size_t(),
+                                    [](size_t curr_sum, const auto& pair) {
+                                        return curr_sum + pair.second;
+                                    })),
+      m_prior(prior), m_likelihood(likelihood) {
+
+    // store the dictionary
+    for (const auto& pair : likelihood) {
+        m_dict.insert(pair.first);
+    }
 
     // store list of classes
     for (const auto& pair : prior) {
         m_class_vec.push_back(pair.first);
     }
 
-    // store the dictionary
+    // store class term counts
     for (const auto& pair : likelihood) {
-        m_dict.insert(pair.first);
+        for (const auto& class_count_pair : pair.second) {
+            const Class& cls = class_count_pair.first;
+            const size_t count = class_count_pair.second;
+
+            const auto index = std::distance(
+                m_class_vec.begin(),
+                std::find(m_class_vec.begin(), m_class_vec.end(), cls));
+
+            m_class_term_counts[index] += count;
+        }
     }
 }
 
@@ -186,18 +208,13 @@ NaiveBayesClassifier<Word, Class>&
 NaiveBayesClassifier<Word, Class>::fit(const std::vector<sample>& x_train,
                                        const std::vector<Class>& y_train) {
     assert(x_train.size() == y_train.size());
-    const size_t n_samples = y_train.size();
 
     m_prior.clear();
     m_likelihood.clear();
 
-    // Compute class prior probabilities
+    // Compute class prior counts
     for (const Class& c : y_train) {
         ++m_prior[c];
-    }
-    for (auto& pair : m_prior) {
-        double& count = pair.second;
-        count /= n_samples;
     }
 
     // Construct class mega documents (concatenate all docs belonging to same
@@ -215,23 +232,16 @@ NaiveBayesClassifier<Word, Class>::fit(const std::vector<sample>& x_train,
         }
     }
 
-    // Compute marginal likelihood for each <word,class> pair with Laplace
-    // smoothing.
+    // Compute marginal likelihood count for each <word,class> pair
     for (const auto& pair : class_megadocs) {
         const Class& cls = pair.first;
         const sample& smp = pair.second;
 
-        int total_word_count =
-            std::accumulate(smp.begin(), smp.end(), 0,
-                            [](size_t curr_sum, const auto& sample_pair) {
-                                return curr_sum + sample_pair.second;
-                            });
         for (const auto& sample_pair : smp) {
             const Word& word = sample_pair.first;
             const size_t count = sample_pair.second;
 
-            m_likelihood[word][cls] = (static_cast<double>(count) + 1) /
-                                      (total_word_count + m_dict.size());
+            m_likelihood[word][cls] = count;
         }
     }
 
@@ -246,14 +256,20 @@ Class NaiveBayesClassifier<Word, Class>::predict(const sample& x_pred) const {
     // initialize MAP score with log class priors
     for (const auto& pair : m_prior) {
         const Class& cls = pair.first;
-        const double prob = pair.second;
-        posterior[cls] = std::log(prob);
+        const size_t count = pair.second;
+
+        const double logprob =
+            std::log(static_cast<double>(count) / total_samples);
+        posterior[cls] = logprob;
     }
 
     // Add log marginal likelihood count many times to corresponding class
     // posterior where count is the number of times a word occurs in the given
     // sample x_pred.
-    for (const Class& cls : m_class_vec) {
+    for (size_t i = 0; i < m_class_vec.size(); ++i) {
+        const Class& cls = m_class_vec[i];
+        const size_t cls_count = m_class_term_counts[i];
+
         for (const auto& sample_pair : x_pred) {
             const Word& word = sample_pair.first;
             const size_t count = sample_pair.second;
@@ -261,8 +277,11 @@ Class NaiveBayesClassifier<Word, Class>::predict(const sample& x_pred) const {
             bool exists =
                 m_likelihood.find(word) != m_likelihood.end() &&
                 m_likelihood.at(word).find(cls) != m_likelihood.at(word).end();
-            double logprob = std::log(exists ? m_likelihood.at(word).at(cls)
-                                             : 1.0 / m_dict.size());
+
+            double nom = exists ? m_likelihood.at(word).at(cls) : 0;
+            double denom = cls_count;
+            double logprob =
+                std::log(laplace_smooth(nom, denom, m_dict.size(), 1));
             posterior[cls] += count * logprob;
         }
     }
@@ -302,14 +321,11 @@ NaiveBayesClassifier<Word, Class>::likelihood() const {
 template <typename Word, typename Class>
 std::ostream& operator<<(std::ostream& os,
                          const NaiveBayesClassifier<Word, Class>& clf) {
-    // output floating point numbers with maximum available precision
-    os.precision(std::numeric_limits<double>::max_digits10);
-
-    // output class prior probabilities on separate lines
+    // output class prior counts on separate lines
     for (const auto& class_pair : clf.prior()) {
         const auto class_name = class_pair.first;
-        const auto prob = class_pair.second;
-        os << class_name << ' ' << std::fixed << prob << '\n';
+        const size_t count = class_pair.second;
+        os << class_name << ' ' << count << '\n';
     }
 
     os << '\n';
@@ -317,13 +333,12 @@ std::ostream& operator<<(std::ostream& os,
     // output marginal likelihood of each <word,class> pair on separate line
     for (const auto& word_pair : clf.likelihood()) {
         const auto& word = word_pair.first;
-        const auto& class_cond_prob = word_pair.second;
+        const auto& class_cond_count = word_pair.second;
 
-        for (const auto& class_pair : class_cond_prob) {
+        for (const auto& class_pair : class_cond_count) {
             const auto class_name = class_pair.first;
-            const auto prob = class_pair.second;
-            os << word << ' ' << class_name << ' ' << std::fixed << prob
-               << '\n';
+            const size_t count = class_pair.second;
+            os << word << ' ' << class_name << ' ' << count << '\n';
         }
     }
 
@@ -341,7 +356,7 @@ std::istream& operator>>(std::istream& is,
     std::string line;
     std::stringstream ss;
     Class class_name;
-    double prob = 0;
+    size_t count = 0;
 
     // read class prior probabilities
     while (std::getline(is, line)) {
@@ -350,9 +365,9 @@ std::istream& operator>>(std::istream& is,
         }
         ss.str(line);
         ss.clear();
-        ss >> class_name >> prob;
+        ss >> class_name >> count;
 
-        prior[class_name] = prob;
+        prior[class_name] = count;
     }
 
     Word word;
@@ -360,9 +375,9 @@ std::istream& operator>>(std::istream& is,
     while (std::getline(is, line)) {
         ss.str(line);
         ss.clear();
-        ss >> word >> class_name >> prob;
+        ss >> word >> class_name >> count;
 
-        likelihood[word][class_name] = prob;
+        likelihood[word][class_name] = count;
     }
 
     // construct a new NaiveBayesClassifier from the read model and assign to
