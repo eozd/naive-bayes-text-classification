@@ -49,6 +49,16 @@ enum class DocClass { Earn, Acq, MoneyFx, Grain, Crude, Other };
 std::ostream& operator<<(std::ostream& os, DocClass doc_class);
 
 /**
+ * @brief Input operator for ir::DocClass.
+ *
+ * @param is Input stream to read the string representation of ir::DocClass.
+ * @param doc_class ir::DocClass enum.
+ *
+ * @return Modified input stream.
+ */
+std::istream& operator>>(std::istream& is, DocClass& doc_class);
+
+/**
  * @brief Typedef for an index that holds the id of a document and its raw
  * content. (train/test) and its raw content.
  */
@@ -61,10 +71,15 @@ using raw_doc_index = std::unordered_map<size_t, raw_doc>;
 using doc_type_index = std::unordered_map<size_t, DocType>;
 
 /**
- * @brief Typedef for an index that holds the id of a document and the vector
- * of classes it belongs to.
+ * @brief Typedef for an index that holds the id of a document and its class.
  */
-using doc_class_index = std::unordered_map<size_t, std::vector<DocClass>>;
+using doc_class_index = std::unordered_map<size_t, DocClass>;
+
+/**
+ * @brief Typedef for an index that holds the id of a document and vector of
+ * the classes it belongs to.
+ */
+using doc_multiclass_index = std::unordered_map<size_t, std::vector<DocClass>>;
 
 using doc_sample = std::unordered_map<std::string, size_t>;
 

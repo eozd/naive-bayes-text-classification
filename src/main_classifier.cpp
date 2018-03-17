@@ -1,7 +1,6 @@
 #include <iostream>
 #include <fstream>
-#include <naive_bayes_classifier.hpp>
-#include <defs.hpp>
+#include "naive_bayes_classifier.hpp"
 #include "file_manager.hpp"
 
 static const std::string FitArg = "--fit";
@@ -56,35 +55,84 @@ bool correct_args(int argc, char** argv) {
     return option == FitArg || option == PredictArg;
 }
 
+void fit(char** argv) {
+    std::string train_path(argv[2]);
+    std::string model_path(argv[3]);
+
+    ir::doc_term_index doc_terms;
+    ir::doc_class_index doc_classes;
+    {
+        std::ifstream train_file(train_path);
+        std::tie(doc_terms, doc_classes) = ir::read_dataset(train_file);
+    }
+
+    std::vector<ir::doc_sample> x_train;
+    std::vector<ir::DocClass> y_train;
+    for (const auto& pair : doc_terms) {
+        const size_t id = pair.first;
+        const ir::doc_sample& doc = pair.second;
+        const ir::DocClass& doc_class = doc_classes[id];
+
+        x_train.push_back(doc);
+        y_train.push_back(doc_class);
+    }
+
+    ir::NaiveBayesClassifier<std::string, ir::DocClass> clf;
+    clf.fit(x_train, y_train);
+    {
+        std::ofstream model_file(model_path);
+        model_file << clf;
+    }
+}
+
+void predict(char** argv) {
+    std::string test_path(argv[2]);
+    std::string model_path(argv[3]);
+
+    ir::NaiveBayesClassifier<std::string, ir::DocClass> clf;
+    {
+        std::ifstream model_file(model_path);
+        model_file >> clf;
+    }
+
+    ir::doc_term_index doc_terms;
+    ir::doc_class_index doc_classes;
+    {
+        std::ifstream test_file(test_path);
+        std::tie(doc_terms, doc_classes) = ir::read_dataset(test_file);
+    }
+
+    std::vector<ir::doc_sample> x_test;
+    std::vector<ir::DocClass> y_test;
+    for (const auto& pair : doc_terms) {
+        const size_t id = pair.first;
+        const ir::doc_sample& doc = pair.second;
+        const ir::DocClass& doc_class = doc_classes[id];
+
+        x_test.push_back(doc);
+        y_test.push_back(doc_class);
+    }
+
+    const auto y_pred = clf.predict(x_test);
+
+    for (size_t i = 0; i < y_pred.size(); ++i) {
+        std::cout << "Test:\t" << y_test[i] << ",\tPred:\t" << y_pred[i] << std::endl;
+    }
+}
+
 int main(int argc, char** argv) {
     if (!correct_args(argc, argv)) {
         print_usage(argv[0] + 2);
         return -1;
     }
 
-    std::string option(argv[1]);
-    std::string dataset_path(argv[2]);
-    std::string model_path(argv[3]);
 
-    ir::NaiveBayesClassifier<ir::DocClass> clf;
+    std::string option(argv[1]);
     if (option == FitArg) {
-        std::ifstream train_file(dataset_path);
-        // build and fit model
-        std::ofstream model_file(model_path);
-        model_file << clf;
+        fit(argv);
     } else if (option == PredictArg) {
-        {
-            std::ifstream model_file(model_path);
-            model_file >> clf;
-        }
-        ir::doc_term_index doc_terms;
-        ir::doc_class_index doc_classes;
-        {
-            std::ifstream test_file(dataset_path);
-            std::tie(doc_terms, doc_classes) = ir::read_dataset(test_file);
-        }
-        // predict classes
-        // output classes to STDOUT
+        predict(argv);
     }
+
     return 0;
 }

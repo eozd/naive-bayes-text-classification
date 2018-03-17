@@ -199,11 +199,11 @@ std::vector<ir::DocClass> get_doc_topics(std::istream& is) {
                                 ir::TOPIC_HEADER_END + " tags");
 }
 
-std::tuple<ir::raw_doc_index, ir::doc_type_index, ir::doc_class_index >
+std::tuple<ir::raw_doc_index, ir::doc_type_index, ir::doc_multiclass_index >
 ir::parse_file(std::istream& ifs) {
     raw_doc_index docs;
     doc_type_index doc_types;
-    doc_class_index doc_classes;
+    doc_multiclass_index doc_classes;
     std::string line;
 
     int id;

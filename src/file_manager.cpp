@@ -3,6 +3,7 @@
 #include "file_manager.hpp"
 #include <algorithm>
 #include <fstream>
+#include <sstream>
 
 std::vector<std::string> ir::get_data_file_list() {
     DIR* dirp = opendir(DATASET_DIR.c_str());
@@ -33,18 +34,14 @@ std::ostream& ir::write_dataset(std::ostream& os,
     for (const auto& pair : term_index) {
         const size_t id = pair.first;
         const auto& doc_terms_counts = pair.second;
-        const auto& classes = class_index.at(id);
+        const auto& doc_class = class_index.at(id);
 
-        os << id;
-        for (const auto doc_class : classes) {
-            os << ' ' << doc_class;
-        }
-        os << '\n';
+        os << id << ' ' << doc_class << '\n';
         for (const auto& term_count_pair : doc_terms_counts) {
             const auto& term = term_count_pair.first;
             const size_t count = term_count_pair.second;
 
-            os << term << " " << count << '\n';
+            os << term << ' ' << count << '\n';
         }
 
         os << '\n';
@@ -56,5 +53,38 @@ std::ostream& ir::write_dataset(std::ostream& os,
 
 std::pair<ir::doc_term_index, ir::doc_class_index>
 ir::read_dataset(std::istream& is){
+    ir::doc_term_index docs;
+    ir::doc_class_index classes;
 
+    std::string line;
+    std::stringstream ss;
+
+    size_t id;
+    ir::DocClass doc_class;
+    std::string word;
+    size_t count;
+
+    bool new_doc = true;
+    while (std::getline(is, line)) {
+        if (line.empty()) {
+            new_doc = true;
+            continue;
+        }
+        ss.str(line);
+        ss.clear();
+
+        if (new_doc) {
+            ss >> id >> doc_class;
+            new_doc = false;
+
+            classes[id] = doc_class;
+            docs[id];
+        } else {
+            ss >> word >> count;
+
+            docs[id][word] = count;
+        }
+    }
+
+   return std::make_pair(docs, classes);
 };

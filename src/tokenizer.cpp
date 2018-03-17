@@ -91,7 +91,7 @@ void ir::Tokenizer::normalize_all(std::vector<std::string>& token_vec) {
                     token_vec.end());
 }
 
-std::vector<std::pair<std::string, size_t>>
+ir::doc_sample
 ir::Tokenizer::get_doc_terms(const raw_doc& doc) {
     auto tokens = tokenize(doc);
 
@@ -103,16 +103,9 @@ ir::Tokenizer::get_doc_terms(const raw_doc& doc) {
 
     std::sort(tokens.begin(), tokens.end());
 
-    std::vector<std::pair<std::string, size_t>> result;
-    result.emplace_back(tokens.front(), 1);
-    for (size_t i = 1; i < tokens.size(); ++i) {
-        const auto& token = tokens[i];
-
-        if (result.back().first == token) {
-            ++result.back().second;
-        } else {
-            result.emplace_back(token, 1);
-        }
+    doc_sample result;
+    for (const auto& term : tokens) {
+        ++result[term];
     }
 
     return result;

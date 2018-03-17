@@ -24,7 +24,7 @@ docs_from_files(const std::vector<std::string>& file_list) {
 
     ir::raw_doc_index docs;
     ir::doc_type_index doc_types;
-    ir::doc_class_index doc_classes;
+    ir::doc_multiclass_index doc_classes;
     for (const auto& filepath : file_list) {
         std::ifstream ifs(filepath);
         // get all the docs in the current file
@@ -50,11 +50,11 @@ docs_from_files(const std::vector<std::string>& file_list) {
             switch (type) {
             case ir::DocType::Train:
                 train_docs[id] = doc;
-                train_classes[id] = classes;
+                train_classes[id] = classes[0];
                 break;
             case ir::DocType::Test:
                 test_docs[id] = doc;
-                test_classes[id] = classes;
+                test_classes[id] = classes[0];
                 break;
             default:
                 break;

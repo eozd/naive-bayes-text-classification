@@ -50,7 +50,7 @@ class Tokenizer {
      * @return std::vector of normalized terms and their counts in the given raw
      * document.
      */
-    std::vector<std::pair<std::string, size_t>>
+    ir::doc_sample
     get_doc_terms(const raw_doc& doc);
 
     /**
