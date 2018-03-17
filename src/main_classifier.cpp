@@ -1,10 +1,11 @@
-#include <iostream>
-#include <fstream>
-#include "naive_bayes_classifier.hpp"
 #include "file_manager.hpp"
+#include "naive_bayes_classifier.hpp"
+#include <fstream>
+#include <iostream>
 
 static const std::string FitArg = "--fit";
 static const std::string PredictArg = "--predict";
+static const std::string NumFeaturesArg = "--num-features";
 
 std::ostream& print_space(std::ostream& os, size_t count) {
     os << std::string(count, ' ');
@@ -15,6 +16,7 @@ void print_usage(char* program_name) {
     std::string header("usage: ");
     std::string param_fit(FitArg + " train_set model_path");
     std::string param_predict(PredictArg + " test_set model_path");
+    std::string param_num_features(NumFeaturesArg + " N");
 
     size_t max_param_len = std::max(param_fit.size(), param_predict.size());
 
@@ -22,8 +24,9 @@ void print_usage(char* program_name) {
     std::cerr << header << '[' << param_fit << ']' << '\n';
 
     print_space(std::cerr, header.size());
+    std::cerr << '[' << param_predict << " [" << param_num_features << ']'
+              << ']' << '\n';
 
-    std::cerr << '[' << param_predict << ']' << '\n';
     std::cerr << '\n';
     std::cerr
         << "Fit a classifier using a training data, or predict the classes\n"
@@ -31,28 +34,47 @@ void print_usage(char* program_name) {
         << '\n';
     std::cerr << '\n';
     std::cerr << "optional arguments:" << '\n';
+
     std::cerr << "  " << param_fit << '\t' << " Fit a Naive Bayes classifier\n";
-
     print_space(std::cerr, max_param_len + 4);
-
     std::cerr << "from given train_set and save the model to model_path"
               << '\n';
+
+    std::cerr << '\n';
+
     std::cerr << "  " << param_predict << '\t'
               << " Predict the classes of samples\n";
-
     print_space(std::cerr, max_param_len + 4);
-
     std::cerr << "at test_set using an already fitted model at model_path"
               << '\n';
+
+    std::cerr << '\n';
+
+    std::cerr << "  " << param_num_features << "\t\t"
+              << " Number of features to use during prediction.\n";
+    print_space(std::cerr, max_param_len + 4);
+    std::cerr << "If not given, all the words are used as features\n";
+
     std::cerr << std::flush;
 }
 
 bool correct_args(int argc, char** argv) {
-    if (argc != 4) {
+    if (!(argc == 4 || argc == 6)) {
         return false;
     }
     std::string option(argv[1]);
-    return option == FitArg || option == PredictArg;
+    bool correct_option = option == FitArg || option == PredictArg;
+    if (argc == 4) {
+        return correct_option;
+    }
+
+    std::string num_features_option(argv[4]);
+    std::string num_features(argv[5]);
+    correct_option = num_features_option == NumFeaturesArg;
+    bool only_digits =
+        num_features.find_first_not_of("0123456789") == std::string::npos;
+
+    return correct_option && only_digits;
 }
 
 void fit(char** argv) {
@@ -85,7 +107,7 @@ void fit(char** argv) {
     }
 }
 
-void predict(char** argv) {
+void predict(char** argv, size_t num_features = 0) {
     std::string test_path(argv[2]);
     std::string model_path(argv[3]);
 
@@ -113,10 +135,15 @@ void predict(char** argv) {
         y_test.push_back(doc_class);
     }
 
+    if (num_features != 0) {
+        // todo: use mutual information to select features for docs
+    }
+
     const auto y_pred = clf.predict(x_test);
 
     for (size_t i = 0; i < y_pred.size(); ++i) {
-        std::cout << "Test:\t" << y_test[i] << ",\tPred:\t" << y_pred[i] << std::endl;
+        std::cout << "Test:\t" << y_test[i] << ",\tPred:\t" << y_pred[i]
+                  << std::endl;
     }
 }
 
@@ -126,12 +153,16 @@ int main(int argc, char** argv) {
         return -1;
     }
 
-
     std::string option(argv[1]);
     if (option == FitArg) {
         fit(argv);
     } else if (option == PredictArg) {
-        predict(argv);
+        if (argc == 6) {
+            size_t num_features = std::stoul(argv[5]);
+            predict(argv, num_features);
+        } else {
+            predict(argv);
+        }
     }
 
     return 0;

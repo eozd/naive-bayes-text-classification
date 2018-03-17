@@ -40,7 +40,8 @@ template <typename Word, typename Class> class NaiveBayesClassifier {
     /**
      * @brief Representation of prior class distribution.
      *
-     * Each entry of prior_t is a mapping from a class to its prior probability.
+     * Each entry of prior_t is a mapping from a class to the count of documents
+     * with that class in the training set.
      */
     using prior_t = std::unordered_map<Class, size_t>;
 
@@ -57,7 +58,7 @@ template <typename Word, typename Class> class NaiveBayesClassifier {
      * for a given word \f$w\f$, \f$p(x_i|c_j) = p(x_k|c_j)\f$, i.e. word
      * positions are not important in determining the likelihoods. Hence,
      * likelihood is simply a mapping from (word, class) pairs to their marginal
-     * likelihood \f$p(w|c)\f$..
+     * likelihood count \f$p(w|c)\f$..
      */
     using likelihood_t =
         std::unordered_map<Word, std::unordered_map<Class, size_t>>;
@@ -76,9 +77,9 @@ template <typename Word, typename Class> class NaiveBayesClassifier {
      * user of this class to provide valid prior and likelihood using this
      * constructor.
      *
-     * @param prior Prior class probability.
-     * @param likelihood Marginal likelihood \f$p(w|c)\f$ where \f$w\f$ is a
-     * word and \f$c\f$ is a class.
+     * @param prior Prior class count distribution.
+     * @param likelihood Marginal likelihood count distribution \f$p(w|c)\f$
+     * where \f$w\f$ is a word and \f$c\f$ is a class.
      */
     NaiveBayesClassifier(const prior_t& prior, const likelihood_t& likelihood);
 
@@ -128,12 +129,12 @@ template <typename Word, typename Class> class NaiveBayesClassifier {
     const likelihood_t& likelihood() const;
 
   private:
-    std::set<Word> m_dict;
-    std::vector<Class> m_class_vec;
-    std::vector<size_t> m_class_term_counts;
-    size_t total_samples;
-    prior_t m_prior;
-    likelihood_t m_likelihood;
+    size_t m_dict_size;             // size of dictionary in the training set
+    std::vector<Class> m_class_vec; // classes in the training set
+    std::vector<size_t> m_class_term_counts; // number of terms in each class
+    size_t total_samples;      // total number of documents in the training set
+    prior_t m_prior;           // prior class count distribution
+    likelihood_t m_likelihood; // marginal likelihood count distribution
 };
 
 /**
@@ -171,17 +172,18 @@ std::istream& operator>>(std::istream& is,
 template <typename Word, typename Class>
 NaiveBayesClassifier<Word, Class>::NaiveBayesClassifier(
     const prior_t& prior, const likelihood_t& likelihood)
-    : m_dict(), m_class_vec(), m_class_term_counts(prior.size(), 0),
+    : m_dict_size(0), m_class_vec(), m_class_term_counts(prior.size(), 0),
       total_samples(std::accumulate(prior.begin(), prior.end(), size_t(),
                                     [](size_t curr_sum, const auto& pair) {
                                         return curr_sum + pair.second;
                                     })),
       m_prior(prior), m_likelihood(likelihood) {
 
-    // store the dictionary
+    std::set<Word> dict;
     for (const auto& pair : likelihood) {
-        m_dict.insert(pair.first);
+        dict.insert(pair.first);
     }
+    m_dict_size = dict.size();
 
     // store list of classes
     for (const auto& pair : prior) {
@@ -281,7 +283,7 @@ Class NaiveBayesClassifier<Word, Class>::predict(const sample& x_pred) const {
             double nom = exists ? m_likelihood.at(word).at(cls) : 0;
             double denom = cls_count;
             double logprob =
-                std::log(laplace_smooth(nom, denom, m_dict.size(), 1));
+                std::log(laplace_smooth(nom, denom, m_dict_size, 1));
             posterior[cls] += count * logprob;
         }
     }
