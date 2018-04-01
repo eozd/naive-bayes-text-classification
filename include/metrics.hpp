@@ -6,30 +6,45 @@
 namespace ir {
 
 /**
- *
+ * @brief Enum denoting the average type to use.
  */
 enum AvgType {
     /**
-     *
+     * @brief Perform micro averaging.
      */
     Micro,
     /**
-     *
+     * @brief Perform macro averaging.
      */
     Macro,
     /**
-     *
+     * @brief Perform no averageng.
      */
     NoAvg
 };
 
 /**
+ * @brief Compute and return precision of each class separately without
+ * averaging
  *
- * @tparam type
- * @tparam Class
- * @param y_true
- * @param y_pred
- * @return
+ * Precision for class \f$i\f$ is calculated as
+ *
+ * \f[
+ *     \frac{TP_i}{P_i}
+ * \f]
+ *
+ * where \f$TP_i\f$ is the number of correct classifications of class \f$i\f$
+ * and \f$P_i\f$ is the number of times class \f$i\f$ is predicted.
+ *
+ * @tparam type Averaging type. This function is used if type is AvgType::NoAvg.
+ * @tparam Class Type of classes to classify the documents to. This can be any
+ * type of object satisfying equality constraint (integer, std::string, custom
+ * enum, etc.)
+ *
+ * @param y_true True labels.
+ * @param y_pred Predicted labels.
+ *
+ * @return Mapping from each class to its precision value.
  */
 template <AvgType type, std::enable_if_t<type == AvgType::NoAvg>* = nullptr,
           typename Class>
@@ -60,12 +75,32 @@ std::unordered_map<Class, double> precision(const std::vector<Class>& y_true,
 };
 
 /**
+ * @brief Compute and return averaged precision over all classes.
  *
- * @tparam type
- * @tparam Class
- * @param y_true
- * @param y_pred
- * @return
+ * Averaging to perform is given as a template parameter.
+ *
+ * Micro averaged precision is calculated as
+ *
+ * \f[
+ *     \frac{\sum_i TP_i}{N}
+ * \f]
+ *
+ * where \f$TP_i\f$ is the number of correct classifications for class \f$i\f$
+ * and \f$N\f$ is the number of samples.
+ *
+ * Macro averaged precision is calculated by finding the precision of each
+ * class separately and then returning the unweighted average of those values.
+ *
+ * @tparam type Type of averaging to perform. This function is chosen if type
+ * is AvgType::Micro or AvgType::Macro.
+ * @tparam Class Type of classes to classify the documents to. This can be any
+ * type of object satisfying equality constraint (integer, std::string, custom
+ * enum, etc.)
+ *
+ * @param y_true True labels.
+ * @param y_pred Predicted labels.
+ *
+ * @return Micro or macro averaged precision.
  */
 template <AvgType type,
           std::enable_if_t<(type == AvgType::Micro) ||
@@ -92,12 +127,26 @@ double precision(const std::vector<Class>& y_true,
 };
 
 /**
+ * @brief Compute and return recall of each class separately without averaging
  *
- * @tparam type
- * @tparam Class
- * @param y_true
- * @param y_pred
- * @return
+ * Recall for class \f$i\f$ is calculated as
+ *
+ * \f[
+ *     \frac{TP_i}{T_i}
+ * \f]
+ *
+ * where \f$TP_i\f$ is the number of correct classifications of class \f$i\f$
+ * and \f$T_i\f$ is the number of times class is actually \f$i\f$.
+ *
+ * @tparam type Averaging type. This function is used if type is AvgType::NoAvg.
+ * @tparam Class Type of classes to classify the documents to. This can be any
+ * type of object satisfying equality constraint (integer, std::string, custom
+ * enum, etc.)
+ *
+ * @param y_true True labels.
+ * @param y_pred Predicted labels.
+ *
+ * @return Mapping from each class to its recall value.
  */
 template <AvgType type, std::enable_if_t<type == AvgType::NoAvg>* = nullptr,
           typename Class>
@@ -128,12 +177,32 @@ std::unordered_map<Class, double> recall(const std::vector<Class>& y_true,
 };
 
 /**
+ * @brief Compute and return averaged recall over all classes.
  *
- * @tparam type
- * @tparam Class
- * @param y_true
- * @param y_pred
- * @return
+ * Averaging to perform is given as a template parameter.
+ *
+ * Micro averaged recall is calculated as
+ *
+ * \f[
+ *     \frac{\sum_i TP_i}{N}
+ * \f]
+ *
+ * where \f$TP_i\f$ is the number of correct classifications for class \f$i\f$
+ * and \f$N\f$ is the number of samples.
+ *
+ * Macro averaged recall is calculated by finding the recall of each
+ * class separately and then returning the unweighted average of those values.
+ *
+ * @tparam type Type of averaging to perform. This function is chosen if type
+ * is AvgType::Micro or AvgType::Macro.
+ * @tparam Class Type of classes to classify the documents to. This can be any
+ * type of object satisfying equality constraint (integer, std::string, custom
+ * enum, etc.)
+ *
+ * @param y_true True labels.
+ * @param y_pred Predicted labels.
+ *
+ * @return Micro or macro averaged recall.
  */
 template <AvgType type,
           std::enable_if_t<(type == AvgType::Micro) ||
@@ -166,12 +235,27 @@ double f_beta(double precision, double recall, double beta = 1) {
 }
 
 /**
+ * @brief Compute and return f-score of each class separately without averaging
  *
- * @tparam type
- * @tparam Class
- * @param y_true
- * @param y_pred
- * @return
+ * F-score for class \f$i\f$ is calculated as
+ *
+ * \f[
+ *     (1 + \beta^2)\frac{P_iR_i}{(\beta^2P_i) + R_i}
+ * \f]
+ *
+ * where \f$\beta\f$ is F score parameter, \f$P_i\f$ is precision of class
+ * \f$i\f$ and \f$R_i\f$ is recall of class \f$i\f$.
+ *
+ * @tparam type Averaging type. This function is used if type is AvgType::NoAvg.
+ * @tparam Class Type of classes to classify the documents to. This can be any
+ * type of object satisfying equality constraint (integer, std::string, custom
+ * enum, etc.)
+ *
+ * @param y_true True labels.
+ * @param y_pred Predicted labels.
+ * @param beta Beta parameter of f-score.
+ *
+ * @return Mapping from each class to its f-score value.
  */
 template <AvgType type, std::enable_if_t<type == AvgType::NoAvg>* = nullptr,
           typename Class>
@@ -194,12 +278,33 @@ std::unordered_map<Class, double> f_score(const std::vector<Class>& y_true,
 };
 
 /**
+ * @brief Compute and return averaged f-score over all classes.
  *
- * @tparam type
- * @tparam Class
- * @param y_true
- * @param y_pred
- * @return
+ * Averaging to perform is given as a template parameter.
+ *
+ * Micro averaged F score is calculated as
+ *
+ * \f[
+ *     (1 + \beta^2)\frac{\hat{P}\hat{R}}{(\beta^2\hat{P}) + \hat{R}}
+ * \f]
+ *
+ * where \f$\hat{P}\f$ is micro averaged precision and \f$\hat{R}\f$ is micro
+ * averaged recall.
+ *
+ * Macro averaged f-score is calculated by finding the f-score of each
+ * class separately and then returning the unweighted average of those values.
+ *
+ * @tparam type Type of averaging to perform. This function is chosen if type
+ * is AvgType::Micro or AvgType::Macro.
+ * @tparam Class Type of classes to classify the documents to. This can be any
+ * type of object satisfying equality constraint (integer, std::string, custom
+ * enum, etc.)
+ *
+ * @param y_true True labels.
+ * @param y_pred Predicted labels.
+ * @param beta Beta parameter of f-score.
+ *
+ * @return Micro or macro averaged f-score.
  */
 template <AvgType type,
           std::enable_if_t<(type == AvgType::Micro) ||
