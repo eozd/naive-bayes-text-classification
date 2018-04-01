@@ -50,15 +50,15 @@ std::vector<std::string> get_data_file_list();
  *     <DOC_ID> <DOC_CLASS>\n
  *     <WORD_1> <COUNT_1>\n
  *     <WORD_2> <COUNT_2>\n
- *     \f$\vdot\f$\n
+ *     \f$\vdots\f$\n
  *     <WORD_N> <COUNT_N>\n
  *     \n
  *     <DOC_ID> <DOC_CLASS>\n
  *     <WORD_1> <COUNT_1>\n
  *     <WORD_2> <COUNT_2>\n
- *     \f$\vdot\f$\n
+ *     \f$\vdots\f$\n
  *     <WORD_N> <COUNT_N>\n
- *     \f$\vdot\f$\n
+ *     \f$\vdots\f$\n
  * </blockquote>
  *
  * @param os Output stream object to write the dataset to.

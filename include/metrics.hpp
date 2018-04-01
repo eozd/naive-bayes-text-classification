@@ -228,6 +228,24 @@ double recall(const std::vector<Class>& y_true,
     }
 };
 
+/**
+ * @brief Compute F-beta score.
+ *
+ * F-beta score is calculated as follows:
+ *
+ * \f[
+ *     (1 + \beta^2)\frac{PR}{(\beta^2P) + R}
+ * \f]
+ *
+ * where \f$\beta\f$ is function parameter, \f$P\f$ is precision and \f$R\f$
+ * is recall.
+ *
+ * @param precision Precision value.
+ * @param recall Recall value.
+ * @param beta Beta parameter.
+ *
+ * @return F-beta score.
+ */
 double f_beta(double precision, double recall, double beta = 1) {
     double beta_sq = beta * beta;
     return (1 + beta_sq) * (precision * recall) /

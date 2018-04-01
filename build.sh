@@ -4,7 +4,7 @@
 #
 # usage: ./build.sh <BUILD_TYPE> [<CMAKE_ARGS>...]
 #
-# <BUILD_TYPE> must be debug, release, clean.
+# <BUILD_TYPE> must be debug, release, clean, doc.
 # <CMAKE_ARGS> are arguments to forward to cmake. You can use any cmake argument
 # here such as -DCMAKE_CXX_COMPILER=g++-5.
 #
@@ -27,9 +27,13 @@ elif [[ ${build} == "clean" ]]; then
 	rm -rf build ||:
 	rm -rf construct_datasets ||:
 	rm -rf classifier ||:
+	rm -rf doc ||:
+	exit
+elif [[ ${build} == "doc" ]]; then
+    doxygen Doxyfile
 	exit
 else
-	echo "Unknown build type: Use one of debug, release, clean"
+	echo "Unknown build type: Use one of debug, release, clean, doc"
 	exit
 fi
 
