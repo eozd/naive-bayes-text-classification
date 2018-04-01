@@ -1,7 +1,9 @@
 #include "feature_selection.hpp"
 #include "file_manager.hpp"
+#include "metrics.hpp"
 #include "naive_bayes_classifier.hpp"
 #include <fstream>
+#include <iomanip>
 #include <iostream>
 
 /**
@@ -172,6 +174,71 @@ void fit(const std::string& train_path, const std::string& model_path,
     model_file << clf;
 }
 
+template <typename LeftVal, typename RightVal>
+std::ostream& print_aligned(std::ostream& os, const LeftVal& left_val,
+                            const RightVal& right_val, size_t width,
+                            size_t precision) {
+    os << std::setw(width) << std::left << left_val << std::setw(width)
+       << std::right << std::fixed << std::setprecision(precision)
+       << right_val << std::endl;
+    return os;
+};
+
+void print_prediction_stats(const std::vector<ir::DocClass>& y_test,
+                            const std::vector<ir::DocClass>& y_pred) {
+    using namespace std;
+    constexpr size_t val_width = 10;
+    constexpr size_t precision = 4;
+    // output prediction statistics to STDERR
+    cerr << "Micro Averaged Stats" << endl;
+    cerr << "--------------------" << endl;
+    print_aligned(cerr, "Precision:", ir::precision<ir::Micro>(y_test, y_pred),
+                  val_width, precision);
+    print_aligned(cerr, "Recall:", ir::recall<ir::Micro>(y_test, y_pred),
+                  val_width, precision);
+    print_aligned(cerr, "F1 score:", ir::f_score<ir::Micro>(y_test, y_pred),
+                  val_width, precision);
+
+    cerr << endl;
+
+    cerr << "Macro Averaged Stats" << endl;
+    cerr << "--------------------" << endl;
+    print_aligned(cerr, "Precision:", ir::precision<ir::Macro>(y_test, y_pred),
+                  val_width, precision);
+    print_aligned(cerr, "Recall:", ir::recall<ir::Macro>(y_test, y_pred),
+                  val_width, precision);
+    print_aligned(cerr, "F1 score:", ir::f_score<ir::Macro>(y_test, y_pred),
+                  val_width, precision);
+
+    cerr << endl;
+
+    const auto separate_precision = ir::precision<ir::NoAvg>(y_test, y_pred);
+    const auto separate_recall = ir::recall<ir::NoAvg>(y_test, y_pred);
+    const auto separate_f_score = ir::f_score<ir::NoAvg>(y_test, y_pred);
+    cerr << "Unaveraged Stats" << endl;
+    cerr << "----------------" << endl;
+    cerr << "Precision:\n";
+    for (const auto& pair : separate_precision) {
+        print_space(cerr, 4);
+        print_aligned(cerr, ir::to_string(pair.first) + ":", pair.second,
+                      val_width, precision);
+    }
+    cerr << endl;
+    cerr << "Recall:\n";
+    for (const auto& pair : separate_recall) {
+        print_space(cerr, 4);
+        print_aligned(cerr, ir::to_string(pair.first) + ":", pair.second,
+                      val_width, precision);
+    }
+    cerr << endl;
+    cerr << "F1-score:\n";
+    for (const auto& pair : separate_f_score) {
+        print_space(cerr, 4);
+        print_aligned(cerr, ir::to_string(pair.first) + ":", pair.second,
+                      val_width, precision);
+    }
+}
+
 /**
  * @brief Predict the classes of all samples in the given test set and output
  * the results to STDOUT.
@@ -216,6 +283,8 @@ void predict(const std::string& test_path, const std::string& model_path) {
                   << '\n';
     }
     std::cout << std::flush;
+
+    print_prediction_stats(y_test, y_pred);
 }
 
 /**

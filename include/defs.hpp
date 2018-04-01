@@ -39,6 +39,15 @@ enum class DocType {
 enum class DocClass { Earn, Acq, MoneyFx, Grain, Crude, Other };
 
 /**
+ * @brief Convert DocClass enum to its string representation.
+ *
+ * @param doc_class ir::DocClass enum
+ *
+ * @return std::string representation of ir::DocClass.
+ */
+std::string to_string(DocClass doc_class);
+
+/**
  * @brief Output operator for ir::DocClass.
  *
  * @param os Output stream to output the string representation of ir::DocClass.

@@ -1,27 +1,25 @@
 #include "defs.hpp"
 #include <iostream>
 
-std::ostream& ir::operator<<(std::ostream& os, ir::DocClass doc_class) {
+std::string ir::to_string(ir::DocClass doc_class) {
     switch (doc_class) {
         case ir::DocClass::Earn:
-            os << "earn";
-            break;
+            return "earn";
         case ir::DocClass::Acq:
-            os << "acq";
-            break;
+            return "acq";
         case ir::DocClass::MoneyFx:
-            os << "money-fx";
-            break;
+            return "money-fx";
         case ir::DocClass::Grain:
-            os << "grain";
-            break;
+            return "grain";
         case ir::DocClass::Crude:
-            os << "crude";
-            break;
+            return "crude";
         case ir::DocClass::Other:
-            os << "other";
-            break;
+            return "other";
     }
+}
+
+std::ostream& ir::operator<<(std::ostream& os, ir::DocClass doc_class) {
+    os << ir::to_string(doc_class);
     return os;
 }
 
