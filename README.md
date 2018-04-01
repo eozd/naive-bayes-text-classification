@@ -94,8 +94,11 @@ chosen using mutual information criterion. To train a model by using the 50
 most important word for each class, run
 
 ```
-./classifier --fit train.txt model.txt --num-features 50
+./classifier --fit train.txt model.txt --num-features 50 2> important_words
 ```
+
+This command will fit the classifier and output the most 50 important word for
+each class to important\_words file.
 
 #### Predicting
 To predict classes of all samples in a test set saved in test.txt

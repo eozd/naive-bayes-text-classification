@@ -1,0 +1,306 @@
+\documentclass{article}
+
+\usepackage{float}
+\usepackage{graphicx}
+\usepackage{color}
+\usepackage[utf8]{inputenc}
+
+\title{CMPE493 Assignment 2 Report}
+\author{Eşref Özdemir\\
+    2013400144
+}
+\date{\today}
+
+
+\begin{document}
+\maketitle
+\tableofcontents
+\newpage
+
+\section{Training and Test Sets}
+Training and test sets are constructed using the parsing and tokenizing
+algorithms of the previous assignment. We again performed stop word removal,
+normalization and stemming steps. After tokenization and splitting the documents
+by their LEWIS\_ID field, training set consisted of $5791$ documents whereas
+test set consisted of $2300$ documents.
+
+\section{50 Most Discriminating Words}
+In this section, we give the 50 most important word for each class. Top left
+word is the most important one, and the importance decreases as one goes from
+left to right and from top to bottom.
+
+\begin{table}[H]
+	\caption{Most discriminating words for earn}
+	\centering
+	\begin{tabular}{|c|c|c|c|c|}
+		\hline
+		vs & ct & shr & net & said \\
+		\hline
+		qtr & to & rev & loss & 4th \\
+		\hline
+		ha & div & at & profit & note \\
+		\hline
+		dividend & record & bui & 31 & avg \\
+		\hline
+		qtly & u. & prior & pct & market \\
+		\hline
+		not & agreement & would & acquir & year \\
+		\hline
+		mth & offer & agre & offici & had \\
+		\hline
+		sell & purchas & sai & exchang & bank \\
+		\hline
+		price & todai & about & export & 1st \\
+		\hline
+		were & jan & wheat & tender & more \\
+		\hline
+	\end{tabular}
+\end{table}
+
+\begin{table}[H]
+	\caption{Most discriminating words for acq}
+	\centering
+	\begin{tabular}{|c|c|c|c|c|}
+		\hline
+		vs & ct & shr & said & acquir \\
+		\hline
+		net & qtr & rev & acquisit & to \\
+		\hline
+		stake & compani & bui & merger & year \\
+		\hline
+		loss & 4th & ha & complet & offer \\
+		\hline
+		sell & share & record & note & common \\
+		\hline
+		div & corp & group & own & inc \\
+		\hline
+		sharehold & outstand & undisclos & purchas & agre \\
+		\hline
+		avg & approv & term & file & qtly \\
+		\hline
+		profit & bid & subsidiari & takeov & dividend \\
+		\hline
+		unit & control & transact & disclos & 31 \\
+		\hline
+	\end{tabular}
+\end{table}
+
+\begin{table}[H]
+	\caption{Most discriminating words for money-fx}
+	\centering
+	\begin{tabular}{|c|c|c|c|c|}
+		\hline
+		bank & dollar & currenc & monei & rate \\
+		\hline
+		market & central & treasuri & dealer & yen \\
+		\hline
+		ct & vs & england & japan & pari \\
+		\hline
+		inc & monetari & around & interven & intervent \\
+		\hline
+		shr & todai & shortag & net & u.k \\
+		\hline
+		at & fed & trade & bill & exchang \\
+		\hline
+		assist & corp & deficit & foreign & share \\
+		\hline
+		qtr & compani & stabil & econom & germani \\
+		\hline
+		sai & stg & band & rev & further \\
+		\hline
+		reserv & repurchas & against & nation & u. \\
+		\hline
+	\end{tabular}
+\end{table}
+
+\begin{table}[H]
+	\caption{Most discriminating words for grain}
+	\centering
+	\begin{tabular}{|c|c|c|c|c|}
+		\hline
+		wheat & agricultur & tonn & grain & corn \\
+		\hline
+		usda & export & crop & u. & depart \\
+		\hline
+		farmer & ct & vs & soybean & soviet \\
+		\hline
+		farm & inc & commod & maiz & barlei \\
+		\hline
+		net & shr & program & 1986/87 & qtr \\
+		\hline
+		rice & bushel & ec & feed & ussr \\
+		\hline
+		compani & share & winter & corp & shipment \\
+		\hline
+		cereal & rev & harvest & union & grower \\
+		\hline
+		to & sorghum & season & import & enhanc \\
+		\hline
+		subsidi & offici & china & acreag & hectar \\
+		\hline
+	\end{tabular}
+\end{table}
+
+\begin{table}[H]
+	\caption{Most discriminating words for crude}
+	\centering
+	\begin{tabular}{|c|c|c|c|c|}
+		\hline
+		oil & barrel & crude & bpd & opec \\
+		\hline
+		petroleum & energi & dai & vs & price \\
+		\hline
+		refineri & product & shr & ga & minist \\
+		\hline
+		drill & output & explor & ct & quota \\
+		\hline
+		gasolin & net & said & ecuador & to \\
+		\hline
+		sea & qtr & last & produc & state \\
+		\hline
+		countri & natur & rev & gulf & at \\
+		\hline
+		iran & iraq & import & pipelin & were \\
+		\hline
+		saudi & report & earthquak & inc & would \\
+		\hline
+		iranian & tanker & refin & sai & suppli \\
+		\hline
+	\end{tabular}
+\end{table}
+
+\section{Metrics}
+
+\subsection{Using All Words}
+
+\begin{table}[H]
+	\caption{Micro averaged precision, recall and F1-score using all words}
+	\centering
+	\begin{tabular}{|c|c|}
+		\hline
+		Metric & Score \\
+		\hline
+		Precision & 0.9791 \\
+		\hline
+		Recall & 0.9791 \\
+		\hline
+		F1-score & 0.9791 \\
+		\hline
+	\end{tabular}
+\end{table}
+
+\begin{table}[H]
+	\caption{Macro averaged precision, recall and F1-score using all words}
+	\centering
+	\begin{tabular}{|c|c|}
+		\hline
+		Metric & Score \\
+		\hline
+		Precision & 0.9767 \\
+		\hline
+		Recall & 0.9814 \\
+		\hline
+		F1-score & 0.9767 \\
+		\hline
+	\end{tabular}
+\end{table}
+
+\begin{table}[H]
+	\caption{Unaveraged precision, recall and F1-score of each class using all words}
+	\centering
+	\begin{tabular}{|c|c|c|c|c|c|}
+		\hline
+		& earn & money-fx & crude & grain & acq \\
+		\hline
+		Precision & 0.9906 & 0.9568 & 0.9775 & 0.9932 & 0.9656 \\
+		\hline
+		Recall & 0.9723 & 0.9944 & 0.9667 & 0.9865 & 0.9873 \\
+		\hline
+		F1-score & 0.9656 & 0.9932 & 0.9775 & 0.9906 & 0.9568 \\
+		\hline
+	\end{tabular}
+\end{table}
+
+\subsection{Using Top 50 Words}
+
+\begin{table}[H]
+	\caption{Micro averaged precision, recall and F1-score using top 50 words}
+	\centering
+	\begin{tabular}{|c|c|}
+		\hline
+		Metric & Score \\
+		\hline
+		Precision & 0.7504 \\
+		\hline
+		Recall & 0.7504 \\
+		\hline
+		F1-score & 0.7504 \\
+		\hline
+	\end{tabular}
+\end{table}
+
+\begin{table}[H]
+	\caption{Macro averaged precision, recall and F1-score using top 50 words}
+	\centering
+	\begin{tabular}{|c|c|}
+		\hline
+		Metric & Score \\
+		\hline
+		Precision & 0.7075 \\
+		\hline
+		Recall & 0.7968 \\
+		\hline
+		F1-score & 0.7075 \\
+		\hline
+	\end{tabular}
+\end{table}
+
+\begin{table}[H]
+	\caption{Unaveraged precision, recall and F1-score of each class using top 50 words}
+	\centering
+	\begin{tabular}{|c|c|c|c|c|c|}
+		\hline
+		& earn & money-fx & crude & grain & acq \\
+		\hline
+		Precision & 0.9932 & 0.9606 & 0.8013 & 0.4515 & 0.3308 \\
+		\hline
+		Recall & 0.8072 & 0.5845 & 0.7022 & 0.9122 & 0.9778 \\
+		\hline
+		F1-score & 0.3308 & 0.4515 & 0.8013 & 0.9932 & 0.9606 \\
+		\hline
+	\end{tabular}
+\end{table}
+
+\section{Screenshots}
+
+\subsection{Constructing Datasets}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=\textwidth]{construct.png}
+\end{figure}
+
+\subsection{Help Message}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=\textwidth]{help.png}
+\end{figure}
+
+\subsection{Fitting with All Words}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=\textwidth]{fit_all.png}
+\end{figure}
+
+\subsection{Fitting with Top 50 Words}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=\textwidth]{fit_50.png}
+\end{figure}
+
+\subsection{Prediction}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=\textwidth]{predict.png}
+\end{figure}
+
+\end{document}

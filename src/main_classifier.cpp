@@ -154,6 +154,20 @@ void fit(const std::string& train_path, const std::string& model_path,
         // get most important words found by mutual info
         auto top_words_per_class = ir::get_top_words_per_class(
             x_train, y_train, class_dict, num_features);
+        
+        for (const auto& pair : top_words_per_class) {
+            const auto& cls = pair.first;
+            const auto& word_vec = pair.second;
+            
+            std::string cls_str = ir::to_string(cls);
+            std::cerr << cls_str << std::endl;
+            for (size_t i = 0; i < cls_str.size(); ++i) std::cerr << '-';
+            std::cerr << std::endl;
+            for (const auto& word : word_vec) {
+                std::cerr << word << std::endl;
+            }
+            std::cerr << std::endl;
+        }
 
         // sort each word vector
         for (auto& pair : top_words_per_class) {
