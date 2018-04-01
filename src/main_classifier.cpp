@@ -179,8 +179,8 @@ std::ostream& print_aligned(std::ostream& os, const LeftVal& left_val,
                             const RightVal& right_val, size_t width,
                             size_t precision) {
     os << std::setw(width) << std::left << left_val << std::setw(width)
-       << std::right << std::fixed << std::setprecision(precision)
-       << right_val << std::endl;
+       << std::right << std::fixed << std::setprecision(precision) << right_val
+       << std::endl;
     return os;
 };
 
@@ -263,6 +263,7 @@ void predict(const std::string& test_path, const std::string& model_path) {
     }
 
     // construct test features (x) and labels (y)
+    std::vector<size_t> id_vec;
     std::vector<ir::doc_sample> x_test;
     std::vector<ir::DocClass> y_test;
     for (const auto& pair : doc_terms) {
@@ -270,6 +271,7 @@ void predict(const std::string& test_path, const std::string& model_path) {
         const ir::doc_sample& doc = pair.second;
         const ir::DocClass& doc_class = doc_classes[id];
 
+        id_vec.push_back(id);
         x_test.push_back(doc);
         y_test.push_back(doc_class);
     }
@@ -278,8 +280,11 @@ void predict(const std::string& test_path, const std::string& model_path) {
     const auto y_pred = clf.predict(x_test);
 
     // output test and prediction labels
-    for (size_t i = 0; i < y_pred.size(); ++i) {
-        std::cout << "Test:\t" << y_test[i] << ",\tPred:\t" << y_pred[i]
+    for (size_t i = 0; i < id_vec.size(); ++i) {
+        std::cout << "ID: " << std::setw(5) << std::right << id_vec[i] << " | "
+                  << "Test: " << std::setw(10) << std::right << y_test[i]
+                  << " | "
+                  << "Pred: " << std::setw(10) << std::right << y_pred[i]
                   << '\n';
     }
     std::cout << std::flush;

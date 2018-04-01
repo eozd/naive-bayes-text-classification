@@ -47,7 +47,7 @@ template <typename Word, typename Class> class NaiveBayesClassifier {
      * 2. Features (word positions) are conditionally independent given class
      *
      * joint likelihood \f$p(x_1, \dots, x_n | c_j)\f$ is factorized to product
-     * of marginal likelihoods \f$p(x_1|c_j)p(x_2|c_j)\dotsp(x_n|c_j)\f$ where
+     * of marginal likelihoods \f$p(x_1|c_j)p(x_2|c_j)\dots(x_n|c_j)\f$ where
      * for a given word \f$w\f$, \f$p(x_i|c_j) = p(x_k|c_j)\f$, i.e. word
      * positions are not important in determining the likelihoods. Hence,
      * likelihood is simply a mapping from (word, class) pairs to their marginal
