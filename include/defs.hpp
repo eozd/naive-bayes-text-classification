@@ -39,6 +39,24 @@ enum class DocType {
 enum class DocClass { Earn, Acq, MoneyFx, Grain, Crude, Other };
 
 /**
+ * @brief Custom hash function for enum types.
+ */
+struct EnumClassHash {
+    template <typename T> std::size_t operator()(T t) const {
+        return static_cast<std::size_t>(t);
+    }
+};
+
+/**
+ * @brief Unordered map from an enum to a value.
+ *
+ * This is a convenience typedef to construct unordered_map types from enum
+ * keys.
+ */
+template <typename Enum, typename Val>
+using unordered_enum_map = std::unordered_map<Enum, Val, EnumClassHash>;
+
+/**
  * @brief Convert DocClass enum to its string representation.
  *
  * @param doc_class ir::DocClass enum

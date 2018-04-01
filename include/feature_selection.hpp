@@ -140,7 +140,7 @@ std::unordered_map<Word, double> mutual_info(const std::vector<sample<Word>>& x,
  * number of most important words.
  */
 template <typename Word, typename Class>
-std::unordered_map<Class, std::vector<Word>>
+ir::unordered_enum_map <Class, std::vector<Word>>
 get_top_words_per_class(const std::vector<sample<Word>>& x_train,
                         const std::vector<Class>& y_train,
                         const std::set<Class>& class_dict, const size_t top_k) {
@@ -148,7 +148,7 @@ get_top_words_per_class(const std::vector<sample<Word>>& x_train,
         return left.second < right.second;
     };
 
-    std::unordered_map<Class, std::vector<Word>> top_words_per_class;
+    ir::unordered_enum_map <Class, std::vector<Word>> top_words_per_class;
     // find important words per class
     for (const Class& doc_class : class_dict) {
         // map from all words to their mut info values
@@ -201,7 +201,7 @@ get_top_words_per_class(const std::vector<sample<Word>>& x_train,
 template <typename Word, typename Class>
 void remove_unimportant_words(
     std::vector<sample<Word>>& x_train, std::vector<Class>& y_train,
-    const std::unordered_map<Class, std::vector<Word>>& top_words_per_class) {
+    const ir::unordered_enum_map <Class, std::vector<Word>>& top_words_per_class) {
 
     // for each class
     for (const auto& pair : top_words_per_class) {

@@ -36,7 +36,7 @@ template <typename Word, typename Class> class NaiveBayesClassifier {
      * Each entry of prior_t is a mapping from a class to the count of documents
      * with that class in the training set.
      */
-    using prior_t = std::unordered_map<Class, size_t>;
+    using prior_t = ir::unordered_enum_map <Class, size_t>;
 
     /**
      * @brief Representation of likelihood \f$p(w|c)\f$.
@@ -54,7 +54,7 @@ template <typename Word, typename Class> class NaiveBayesClassifier {
      * likelihood count \f$p(w|c)\f$..
      */
     using likelihood_t =
-        std::unordered_map<Word, std::unordered_map<Class, size_t>>;
+        std::unordered_map<Word, ir::unordered_enum_map <Class, size_t>>;
 
   public:
     /**
@@ -214,7 +214,7 @@ NaiveBayesClassifier<Word, Class>::fit(const std::vector<sample<Word>>& x_train,
 
     // Construct class mega documents (concatenate all docs belonging to same
     // class)
-    std::unordered_map<Class, sample<Word>> class_megadocs;
+    ir::unordered_enum_map <Class, sample<Word>> class_megadocs;
     for (size_t i = 0; i < x_train.size(); ++i) {
         const sample<Word>& smp = x_train[i];
         const Class& cls = y_train[i];
@@ -247,7 +247,7 @@ template <typename Word, typename Class>
 Class NaiveBayesClassifier<Word, Class>::predict(
     const sample<Word>& x_pred) const {
     // Log posterior score of each class
-    std::unordered_map<Class, double> posterior;
+    ir::unordered_enum_map <Class, double> posterior;
 
     // initialize MAP score with log class priors
     for (const auto& pair : m_prior) {

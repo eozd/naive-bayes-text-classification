@@ -48,10 +48,10 @@ enum AvgType {
  */
 template <AvgType type, std::enable_if_t<type == AvgType::NoAvg>* = nullptr,
           typename Class>
-std::unordered_map<Class, double> precision(const std::vector<Class>& y_true,
+ir::unordered_enum_map <Class, double> precision(const std::vector<Class>& y_true,
                                             const std::vector<Class>& y_pred) {
-    std::unordered_map<Class, double> precision;
-    std::unordered_map<Class, size_t> positive_count;
+    ir::unordered_enum_map <Class, double> precision;
+    ir::unordered_enum_map <Class, size_t> positive_count;
 
     // calculate counts
     for (size_t i = 0; i < y_true.size(); ++i) {
@@ -150,10 +150,10 @@ double precision(const std::vector<Class>& y_true,
  */
 template <AvgType type, std::enable_if_t<type == AvgType::NoAvg>* = nullptr,
           typename Class>
-std::unordered_map<Class, double> recall(const std::vector<Class>& y_true,
+ir::unordered_enum_map <Class, double> recall(const std::vector<Class>& y_true,
                                          const std::vector<Class>& y_pred) {
-    std::unordered_map<Class, double> recall;
-    std::unordered_map<Class, size_t> true_count;
+    ir::unordered_enum_map <Class, double> recall;
+    ir::unordered_enum_map <Class, size_t> true_count;
 
     // calculate counts
     for (size_t i = 0; i < y_true.size(); ++i) {
@@ -277,13 +277,13 @@ double f_beta(double precision, double recall, double beta = 1) {
  */
 template <AvgType type, std::enable_if_t<type == AvgType::NoAvg>* = nullptr,
           typename Class>
-std::unordered_map<Class, double> f_score(const std::vector<Class>& y_true,
+ir::unordered_enum_map <Class, double> f_score(const std::vector<Class>& y_true,
                                           const std::vector<Class>& y_pred,
                                           double beta = 1) {
     const auto separate_precision = precision<NoAvg>(y_true, y_pred);
     const auto separate_recall = precision<NoAvg>(y_true, y_pred);
 
-    std::unordered_map<Class, double> fscores;
+    ir::unordered_enum_map <Class, double> fscores;
     for (const auto& pair : separate_precision) {
         const auto& cls = pair.first;
         const double precision = pair.second;
