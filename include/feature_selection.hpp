@@ -73,7 +73,10 @@ std::unordered_map<Word, double> mutual_info(const std::vector<sample<Word>>& x,
     // table of counts ([0][0] <--> e_w = 0 AND e_c = 0, and so on)
     std::array<std::array<size_t, n_cols>, n_rows> count;
     for (const Word& word : dict) {
-        count = {{{0, 0}, {0, 0}}};
+        // set all counts to 0
+        std::for_each(count.begin(), count.end(),
+                      [](auto& arr) { arr.fill(0); });
+
         for (size_t id : word_docs[word]) {
             if (y[id] == target) {
                 ++count[1][1];
@@ -113,14 +116,28 @@ std::unordered_map<Word, double> mutual_info(const std::vector<sample<Word>>& x,
 };
 
 /**
+ * @brief Get top K important word for each class using Mutual Information.
  *
- * @tparam Word
- * @tparam Class
- * @param x_train
- * @param y_train
- * @param class_dict
- * @param top_k
- * @return
+ * This function finds the top K most important word for each class and
+ * returns a map from each class to a vector of most important words. Important
+ * words for each class are found using ir::mutual_info function.
+ *
+ * @tparam Word Type of words that occur in documents. For text documents, this
+ * is generally a variant of std::string.
+ * @tparam Class Type of classes to classify the documents to. This can be any
+ * type of object satisfying equality constraint (integer, std::string, custom
+ * enum, etc.)
+ *
+ * @param x_train vector of sample documents (training data).
+ * @param y_train vector of corresponding sample classes
+ * @param class_dict Set containing all the classes in the given training set.
+ * @param top_k Number of most important words
+ *
+ * @return Map from class to a vector of corresponding most important words.
+ *
+ * @remark Time complexity is \f$\Theta(CN + CK\log{N})\f$ where \f$C\f$ is
+ * the number of classes, \f$N\f$ is the total number of words, \f$K\f$ is the
+ * number of most important words.
  */
 template <typename Word, typename Class>
 std::unordered_map<Class, std::vector<Word>>
@@ -132,22 +149,24 @@ get_top_words_per_class(const std::vector<sample<Word>>& x_train,
     };
 
     std::unordered_map<Class, std::vector<Word>> top_words_per_class;
+    // find important words per class
     for (const Class& doc_class : class_dict) {
+        // map from all words to their mut info values
         auto mut_info_map = ir::mutual_info(x_train, y_train, doc_class);
 
+        // make a heap in linear time
         std::vector<std::pair<Word, double>> mut_info_vec;
         std::copy(mut_info_map.begin(), mut_info_map.end(),
                   std::back_inserter(mut_info_vec));
         std::make_heap(mut_info_vec.begin(), mut_info_vec.end(), max_lambda);
 
+        // get top K words in KlogN time
         std::vector<Word> top_k_words;
         for (size_t i = 0; i < top_k; ++i) {
             top_k_words.push_back(mut_info_vec.front().first);
             std::pop_heap(mut_info_vec.begin(), mut_info_vec.end(), max_lambda);
             mut_info_vec.pop_back();
         }
-
-        std::sort(top_k_words.begin(), top_k_words.end());
         top_words_per_class[doc_class] = top_k_words;
     }
 
@@ -155,32 +174,54 @@ get_top_words_per_class(const std::vector<sample<Word>>& x_train,
 };
 
 /**
+ * @brief Remove unimportant words from the training set using a mapping from
+ * each class to most important words for that class.
  *
- * @tparam Word
- * @tparam Class
- * @param x_train
- * @param y_train
- * @param top_words_per_class
+ * For a document \f$D\f$ that belongs to class \f$C\f$ and a set of important
+ * words for class \f$C\f$ called \f$V_C\f$, this function removes all words
+ * from document \f$D\f$ that is not in \f$V_C\f$. To do this efficiently,
+ * it is required that \f$V_C\f$ must be sorted.
+ *
+ * @tparam Word Type of words that occur in documents. For text documents, this
+ * is generally a variant of std::string.
+ * @tparam Class Type of classes to classify the documents to. This can be any
+ * type of object satisfying equality constraint (integer, std::string, custom
+ * enum, etc.)
+ *
+ * @param x_train vector of sample documents (training data).
+ * @param y_train vector of corresponding sample classes
+ * @param top_words_per_class Mapping from each class to a vector of most
+ * important words. Vector of most important word must be sorted.
+ *
+ * @remark Time complexity is \f$\Theta(N_1\log{K_1} + N_2\log{K_2} + \dots +
+ * N_C\log{K_C})\f$ where \f$N_i\f$ is the total number of words in all
+ * documents belonging to class \f$i\f$, \f$K_i\f$ is the number of most
+ * important words for class \f$i\f$.
  */
 template <typename Word, typename Class>
 void remove_unimportant_words(
     std::vector<sample<Word>>& x_train, std::vector<Class>& y_train,
     const std::unordered_map<Class, std::vector<Word>>& top_words_per_class) {
 
+    // for each class
     for (const auto& pair : top_words_per_class) {
         const Class& cls = pair.first;
         const auto& top_words = pair.second;
 
+        // for each doc
         for (size_t i = 0; i < y_train.size(); ++i) {
+            // only for docs in current class
             if (y_train[i] != cls) {
                 continue;
             }
 
+            // words in current doc
             std::vector<Word> words;
             for (const auto& word_count_pair : x_train[i]) {
                 words.push_back(word_count_pair.first);
             }
 
+            // if word is not in important vector, remove it
             for (const auto& word : words) {
                 bool not_top_word = !std::binary_search(top_words.begin(),
                                                         top_words.end(), word);

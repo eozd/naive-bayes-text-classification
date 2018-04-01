@@ -2,7 +2,6 @@
 #include <fstream>
 #include <iostream>
 #include <tokenizer.hpp>
-
 #include "doc_preprocessor.hpp"
 #include "file_manager.hpp"
 #include "parser.hpp"
@@ -129,6 +128,8 @@ int main() {
     }
 
     std::cerr << "OK!" << std::endl;
+
+    // output statistics
     std::cerr << train_doc_terms_counts.size()
               << " documents was indexed to construct the train dataset at "
               << ir::TRAIN_SET_PATH << std::endl;

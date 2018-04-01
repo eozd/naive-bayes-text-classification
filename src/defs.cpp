@@ -1,5 +1,4 @@
 #include "defs.hpp"
-
 #include <iostream>
 
 std::ostream& ir::operator<<(std::ostream& os, ir::DocClass doc_class) {

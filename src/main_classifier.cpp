@@ -5,23 +5,25 @@
 #include <iostream>
 
 /**
- *
+ * @brief Fit argument string.
  */
 static const std::string FitArg = "--fit";
 /**
- *
+ * @brief Predict argument string.
  */
 static const std::string PredictArg = "--predict";
 /**
- *
+ * @brief Number of features argument string.
  */
 static const std::string NumFeaturesArg = "--num-features";
 
 /**
+ * @brief Output count many space characters to the given output stream.
  *
- * @param os
- * @param count
- * @return
+ * @param os Output stream.
+ * @param count Number of spaces to output.
+ *
+ * @return Modified output stream.
  */
 std::ostream& print_space(std::ostream& os, size_t count) {
     os << std::string(count, ' ');
@@ -29,8 +31,9 @@ std::ostream& print_space(std::ostream& os, size_t count) {
 }
 
 /**
+ * @brief Print program usage string.
  *
- * @param program_name
+ * @param program_name Name of the program.
  */
 void print_usage(char* program_name) {
     std::string header("usage: ");
@@ -49,43 +52,46 @@ void print_usage(char* program_name) {
 
     std::cerr << '\n';
     std::cerr
-        << "Fit a classifier using a training data, or predict the classes\n"
-           "of a test data using an already predict model"
+        << "Fit a classifier using a training set; or predict the classes\n"
+           "of a test set using an already fitted model."
         << '\n';
     std::cerr << '\n';
     std::cerr << "optional arguments:" << '\n';
 
-    std::cerr << "  " << param_fit << '\t' << " Fit a Naive Bayes classifier\n";
+    std::cerr << "  " << param_fit << '\t'
+              << " Fit a Naive Bayes classifier from given\n";
     print_space(std::cerr, max_param_len + 4);
-    std::cerr << "from given train_set and save the model to model_path"
-              << '\n';
+    std::cerr << "train_set and save the model to model_path." << '\n';
 
     std::cerr << '\n';
 
     std::cerr << "  " << param_num_features << "\t\t"
               << " Number of features to use during training.\n";
     print_space(std::cerr, max_param_len + 4);
-    std::cerr << "If not given, all the words are used as features.\n";
+    std::cerr << "Best N features are chosen using Mutual Information.\n";
     print_space(std::cerr, max_param_len + 4);
-    std::cerr
-        << "Best N features are chosen using Mutual Information criterion\n";
+    std::cerr << "If not given, all the words are used as features.\n";
 
     std::cerr << '\n';
 
     std::cerr << "  " << param_predict << '\t'
-              << " Predict the classes of samples\n";
+              << " Predict the classes of samples in test_set\n";
     print_space(std::cerr, max_param_len + 4);
-    std::cerr << "at test_set using an already fitted model at model_path"
-              << '\n';
+    std::cerr << "using an already fitted model in model_path\n";
+    print_space(std::cerr, max_param_len + 4);
+    std::cerr << "and output the results to STDOUT." << '\n';
 
     std::cerr << std::flush;
 }
 
 /**
+ * @brief Check if the program arguments are given correctly.
  *
- * @param argc
- * @param argv
- * @return
+ * @param argc Number of arguments as given in int main(int argc, char** argv).
+ * @param argv Argument string array as given in int main(int argc, char**
+ * argv).
+ *
+ * @return true if the given arguments are correct; false, otherwise.
  */
 bool correct_args(int argc, char** argv) {
     if (!(argc == 4 || argc == 6)) {
@@ -107,14 +113,18 @@ bool correct_args(int argc, char** argv) {
 }
 
 /**
+ * @brief Fit a Naive Bayes Classifier with the given number of features.
  *
- * @param argv
- * @param num_features
+ * This function trains a Naive Bayes Classifier from the given training set
+ * and saves the model to the given output path.
+ *
+ * @param train_path Path to the training set.
+ * @param model_path Path to which the model is going to be saved.
+ * @param num_features Number of features to use. If not given, all the features
+ * are used.
  */
-void fit(char** argv, size_t num_features = 0) {
-    std::string train_path(argv[2]);
-    std::string model_path(argv[3]);
-
+void fit(const std::string& train_path, const std::string& model_path,
+         size_t num_features = 0) {
     ir::doc_term_index doc_terms;
     ir::doc_class_index doc_classes;
     {
@@ -122,6 +132,8 @@ void fit(char** argv, size_t num_features = 0) {
         std::tie(doc_terms, doc_classes) = ir::read_dataset(train_file);
     }
 
+    // construct training set feature (x) and label (y) sets, and a set of
+    // classes.
     std::vector<ir::doc_sample> x_train;
     std::vector<ir::DocClass> y_train;
     std::set<ir::DocClass> class_dict;
@@ -135,35 +147,47 @@ void fit(char** argv, size_t num_features = 0) {
         class_dict.insert(doc_class);
     }
 
+    // choose important words via mutual information if num_features is given
     if (num_features != 0) {
+        // get most important words found by mutual info
         auto top_words_per_class = ir::get_top_words_per_class(
             x_train, y_train, class_dict, num_features);
 
+        // sort each word vector
+        for (auto& pair : top_words_per_class) {
+            auto& word_vec = pair.second;
+            std::sort(word_vec.begin(), word_vec.end());
+        }
+
+        // remove unimportant words
         ir::remove_unimportant_words(x_train, y_train, top_words_per_class);
     }
 
+    // fit naive bayes clf
     ir::NaiveBayesClassifier<std::string, ir::DocClass> clf;
     clf.fit(x_train, y_train);
-    {
-        std::ofstream model_file(model_path);
-        model_file << clf;
-    }
+
+    // save the classifier
+    std::ofstream model_file(model_path);
+    model_file << clf;
 }
 
 /**
+ * @brief Predict the classes of all samples in the given test set and output
+ * the results to STDOUT.
  *
- * @param argv
+ * @param test_path Path to the test set.
+ * @param model_path Path to an already fitted model file.
  */
-void predict(char** argv) {
-    std::string test_path(argv[2]);
-    std::string model_path(argv[3]);
-
+void predict(const std::string& test_path, const std::string& model_path) {
+    // read the classifier
     ir::NaiveBayesClassifier<std::string, ir::DocClass> clf;
     {
         std::ifstream model_file(model_path);
         model_file >> clf;
     }
 
+    // read test set
     ir::doc_term_index doc_terms;
     ir::doc_class_index doc_classes;
     {
@@ -171,6 +195,7 @@ void predict(char** argv) {
         std::tie(doc_terms, doc_classes) = ir::read_dataset(test_file);
     }
 
+    // construct test features (x) and labels (y)
     std::vector<ir::doc_sample> x_test;
     std::vector<ir::DocClass> y_test;
     for (const auto& pair : doc_terms) {
@@ -182,19 +207,27 @@ void predict(char** argv) {
         y_test.push_back(doc_class);
     }
 
+    // predict test features
     const auto y_pred = clf.predict(x_test);
 
+    // output test and prediction labels
     for (size_t i = 0; i < y_pred.size(); ++i) {
         std::cout << "Test:\t" << y_test[i] << ",\tPred:\t" << y_pred[i]
-                  << std::endl;
+                  << '\n';
     }
+    std::cout << std::flush;
 }
 
 /**
+ * @brief Main classifier program.
  *
- * @param argc
- * @param argv
- * @return
+ * This function checks if the given arguments are correct, then fits a model
+ * or predicts the samples in a test set using an already fitted model.
+ *
+ * @param argc Number of arguments.
+ * @param argv Arguments (array of C-strings).
+ *
+ * @return 0 if no errors occur; -1 if incorrect arguments are given.
  */
 int main(int argc, char** argv) {
     if (!correct_args(argc, argv)) {
@@ -204,14 +237,20 @@ int main(int argc, char** argv) {
 
     std::string option(argv[1]);
     if (option == FitArg) {
+        std::string train_path(argv[2]);
+        std::string model_path(argv[3]);
+
         if (argc == 6) {
             size_t num_features = std::stoul(argv[5]);
-            fit(argv, num_features);
+            fit(train_path, model_path, num_features);
         } else {
-            fit(argv);
+            fit(train_path, model_path);
         }
     } else if (option == PredictArg) {
-        predict(argv);
+        std::string test_path(argv[2]);
+        std::string model_path(argv[3]);
+
+        predict(test_path, model_path);
     }
 
     return 0;

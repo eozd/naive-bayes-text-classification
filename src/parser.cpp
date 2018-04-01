@@ -159,19 +159,26 @@ std::vector<ir::DocClass> get_doc_topics(std::istream& is) {
     std::string line;
     size_t beg_header_pos;
     while (std::getline(is, line)) {
+        // advance until topic header beginning is found
         beg_header_pos = line.find(ir::TOPIC_HEADER_BEG);
         if (beg_header_pos != std::string::npos) {
-            size_t class_tag_beg_pos;
-            class_tag_beg_pos = line.find(ir::CLASS_BEG_TAG);
+            // find class beginning index
+            size_t class_tag_beg_pos = line.find(ir::CLASS_BEG_TAG);
+
+            // iterate over all class tags
             while (class_tag_beg_pos != std::string::npos) {
                 size_t class_tag_end_pos =
                     line.find(ir::CLASS_END_TAG, class_tag_beg_pos);
+
+                // current class tag indices
                 size_t class_beg = class_tag_beg_pos + ir::CLASS_BEG_TAG.size();
                 size_t class_len = class_tag_end_pos - class_beg;
 
+                // get document class
                 std::string doc_class = line.substr(class_beg, class_len);
                 assert(!doc_class.empty());
 
+                // switch the class
                 if (doc_class == ir::EARN_CLASS_KEY) {
                     result.push_back(ir::DocClass::Earn);
                 } else if (doc_class == ir::ACQ_CLASS_KEY) {
@@ -186,6 +193,7 @@ std::vector<ir::DocClass> get_doc_topics(std::istream& is) {
                     result.push_back(ir::DocClass::Other);
                 }
 
+                // go to the next class tag
                 class_tag_beg_pos =
                     line.find(ir::CLASS_BEG_TAG, class_tag_end_pos);
             }
@@ -211,16 +219,23 @@ ir::parse_file(std::istream& ifs) {
     raw_doc doc;
     while (std::getline(ifs, line)) {
         if (line.find(DOC_HEADER) == 0) {
+            // found a new document
             id = get_doc_id(line);
             type = get_doc_type(line);
 
+            // get document topics
             auto topics = get_doc_topics(ifs);
+
+            // get document string
             doc = get_next_doc(ifs);
             doc = text_between_tags(doc, TITLE_BEG_TAG, TITLE_END_TAG) + "\n" +
                   text_between_tags(doc, BODY_BEG_TAG, BODY_END_TAG);
 
+            // document string
             docs[id] = doc;
+            // document type (train/test)
             doc_types[id] = type;
+            // document topics
             doc_classes[id] = topics;
         }
     }

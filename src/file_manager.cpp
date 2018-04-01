@@ -66,6 +66,7 @@ ir::read_dataset(std::istream& is){
 
     bool new_doc = true;
     while (std::getline(is, line)) {
+        // empty line starts a new document
         if (line.empty()) {
             new_doc = true;
             continue;
@@ -74,12 +75,14 @@ ir::read_dataset(std::istream& is){
         ss.clear();
 
         if (new_doc) {
+            // read doc ID and class
             ss >> id >> doc_class;
             new_doc = false;
 
             classes[id] = doc_class;
             docs[id];
         } else {
+            // read word and its count
             ss >> word >> count;
 
             docs[id][word] = count;

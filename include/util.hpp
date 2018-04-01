@@ -21,16 +21,28 @@ namespace ir {
 std::vector<std::string> split(std::string& str, const std::string& delimiters);
 
 /**
+ * @brief Return Laplace smoothed version of the given fraction.
  *
- * @tparam Scalar
- * @param nom
- * @param denom
- * @param total_items
- * @param alpha
- * @return
+ * This function returns the Laplace smoothed version of the given fraction in
+ * nom and denom parameters. Laplace smooth with inputs \f$x, y\f$ and
+ * parameters \f$\alpha, d\f$ is defined as follows:
+ *
+ * \f[
+ * \mathcal{L}(x, y; \alpha, d) = \frac{x + \alpha}{y + d\alpha}
+ * \f]
+ *
+ * @tparam Scalar1 Scalar type that can be summed with a double.
+ * @tparam Scalar2 Scalar type that can be summed with a double.
+ *
+ * @param nom Nominator of the fraction (\f$x\f$).
+ * @param denom Denominator of the fraction (\f$y\f$).
+ * @param total_items Total number of items in smoothing (\f$d\f$).
+ * @param alpha Smoothing parameter (\f$\alpha\f$).
+ *
+ * @return Laplace smoothed fraction.
  */
-template <typename Scalar>
-double laplace_smooth(Scalar nom, Scalar denom, size_t total_items,
+template <typename Scalar1, typename Scalar2>
+double laplace_smooth(Scalar1 nom, Scalar2 denom, size_t total_items,
                       double alpha = 1) {
     return static_cast<double>(nom + alpha) / (denom + alpha * total_items);
 }
