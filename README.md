@@ -1,9 +1,26 @@
-# CmpE 493 Assignment 2
+# Text Classification with Multinomial Naive Bayes
+In this project, we implement a text classifier using multinomial naive bayes
+model on Reuters-21578 dataset. This is done in the following steps:
+
+1. Construct training and test datasets using LEWISSPLIT tag.
+2. Build naive bayes model.
+  1. Normally, multinomial naive bayes uses all the words in the given
+  documents. This generally results is good representations.
+  2. Additionally, we implement mutual information feature selection to use only
+  the top K most important words in training documents.
+3. Predict the classes of test documents using the already built model.
+4. Output metrics. In this project, we use micro-averaged, macro-averaged and
+unaveraged precision, recall and F1-scores.
 
 ## Requirements
 1. g++-5 and above with full C++14 support
 2. cmake 3.2.2 and above
-3. doxygen (optional)
+3. dirent.h header to retrieve file information. This normally comes installed
+C POSIX library. However, if you are on Windows and compiling with MSVC,
+you need to obtain this header manually.
+4. Porter Stemmer in file src/porter\_stemmer.cpp. For reference page, go to
+[https://tartarus.org/martin/PorterStemmer/](https://tartarus.org/martin/PorterStemmer/).
+5. doxygen (optional)
 
 ## Build
 To build the project, run the following commands in the project root directory
@@ -60,7 +77,13 @@ Dataset
 ...
 ```
 
-To construct the datasets, simply run
+To obtain the Reutrs-21578 dataset, please go to
+[reuters21578](http://www.daviddlewis.com/resources/testcollections/reuters21578/),
+download the gzipped tar archive and copy it into the project root directory.
+Then, by running extract\_dataset.sh script, you can create the necessary
+dataset layout.
+
+Afterwards to to construct the datasets, simply run
 ```
 ./construct_datasets
 ```
